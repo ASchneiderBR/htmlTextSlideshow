@@ -4,6 +4,8 @@ const textarea = document.querySelector("#slidesTextarea");
 const preview = document.querySelector("#preview");
 const insertDelimiterBtn = document.querySelector("[data-action='insert-delimiter']");
 const cheatsheetBtn = document.querySelector("[data-action='open-cheatsheet']");
+const addSlidesBtn = document.querySelector("[data-action='add-slides']");
+const clearAllBtn = document.querySelector("[data-action='clear-all']");
 const statusLogEl = document.querySelector("#statusLog");
 const previewCountEl = document.querySelector("[data-preview-count]");
 
@@ -12,6 +14,8 @@ const fontSizeInput = document.querySelector("#fontSize");
 const textAlignSelect = document.querySelector("#textAlign");
 const verticalAlignSelect = document.querySelector("#verticalAlign");
 const statusPill = document.querySelector("[data-status-pill]");
+
+let draggedSlideIndex = null;
 
 const STATE_STORAGE_KEY = "obsTextSlides.state";
 const DELIMITER = "\n\n---\n\n";
@@ -115,31 +119,49 @@ function applyStateToUi() {
   if (fontSizeInput) fontSizeInput.value = String(state.settings.defaultFontSizePx);
   if (textAlignSelect) textAlignSelect.value = state.settings.textAlign;
   if (verticalAlignSelect) verticalAlignSelect.value = state.settings.verticalAlign;
-  if (textarea) {
-    textarea.value = (state.slides || []).map((slide) => slide.raw || "").join(DELIMITER);
-  }
   renderPreview();
+  updateClearAllButton();
 }
 
 function renderPreview() {
   if (!preview) return;
-  const html =
-    (state.slides || [])
-      .map(
-        (slide, index) => `
-      <article class="preview__slide">
-        <header>Slide ${index + 1}</header>
-        <div class="preview__content">${markdownToHtml(slide.raw || "")}</div>
+  
+  if (!state.slides || state.slides.length === 0) {
+    preview.innerHTML = '<p class="preview__empty">No slides yet. Add content using the editor above.</p>';
+    if (previewCountEl) {
+      previewCountEl.textContent = "0 slides";
+    }
+    return;
+  }
+
+  const html = state.slides
+    .map(
+      (slide, index) => `
+      <article class="preview__slide" draggable="true" data-slide-index="${index}">
+        <div class="preview__slide-header">
+          <div class="preview__slide-title">
+            <span class="preview__slide-drag-handle">⋮⋮</span>
+            <span>Slide ${index + 1}</span>
+          </div>
+          <div class="preview__slide-actions">
+            <button type="button" class="preview__slide-delete" data-delete-index="${index}">Delete</button>
+          </div>
+        </div>
+        <div class="preview__slide-content">${markdownToHtml(slide.raw || "")}</div>
       </article>
     `
-      )
-      .join("") || "<p>No content yet.</p>";
+    )
+    .join("");
+  
   preview.innerHTML = html;
+  
   if (previewCountEl) {
     previewCountEl.textContent = `${state.slides.length} ${
       state.slides.length === 1 ? "slide" : "slides"
     }`;
   }
+
+  attachSlideEventListeners();
 }
 
 function parseSlides(value) {
@@ -159,33 +181,150 @@ function parseSlides(value) {
     }));
 }
 
-function onTextareaInput() {
-  window.requestAnimationFrame(() => {
-    state.slides = parseSlides(textarea.value);
-    if (!state.slides.length) {
-      state.activeSlideIndex = 0;
-    } else if (state.activeSlideIndex > state.slides.length - 1) {
-      state.activeSlideIndex = state.slides.length - 1;
-    }
-    renderPreview();
-    persistState("editor");
-  });
+function addSlides() {
+  if (!textarea || !textarea.value.trim()) return;
+  
+  const newSlides = parseSlides(textarea.value);
+  if (!newSlides.length) return;
+  
+  // Add new slides to existing ones
+  state.slides.push(...newSlides);
+  
+  // Clear textarea
+  textarea.value = "";
+  
+  // Update UI and persist
+  renderPreview();
+  updateClearAllButton();
+  persistState("add-slides");
+  appendStatusLog(`Added ${newSlides.length} slide${newSlides.length > 1 ? 's' : ''}.`);
 }
 
-function handleTextareaShortcut(event) {
-  if (event.ctrlKey && event.key === "Enter") {
-    event.preventDefault();
-    persistState("manual shortcut");
+function deleteSlide(index) {
+  if (index < 0 || index >= state.slides.length) return;
+  
+  state.slides.splice(index, 1);
+  
+  // Adjust active slide index if needed
+  if (state.activeSlideIndex >= state.slides.length) {
+    state.activeSlideIndex = Math.max(0, state.slides.length - 1);
   }
+  
+  renderPreview();
+  updateClearAllButton();
+  persistState("delete-slide");
+  appendStatusLog(`Deleted slide ${index + 1}.`);
+}
+
+function clearAllSlides() {
+  if (!state.slides.length) return;
+  
+  const count = state.slides.length;
+  state.slides = [];
+  state.activeSlideIndex = 0;
+  
+  renderPreview();
+  updateClearAllButton();
+  persistState("clear-all");
+  appendStatusLog(`Cleared all ${count} slides.`);
+}
+
+function updateClearAllButton() {
+  if (!clearAllBtn) return;
+  clearAllBtn.disabled = !state.slides || state.slides.length === 0;
 }
 
 function insertDelimiter() {
   if (!textarea) return;
   const { selectionStart, selectionEnd, value } = textarea;
   textarea.value = `${value.slice(0, selectionStart)}${DELIMITER}${value.slice(selectionEnd)}`;
-  textarea.dispatchEvent(new Event("input"));
   textarea.focus();
   textarea.selectionStart = textarea.selectionEnd = selectionStart + DELIMITER.length;
+}
+
+function attachSlideEventListeners() {
+  // Delete buttons
+  const deleteButtons = document.querySelectorAll(".preview__slide-delete");
+  deleteButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.deleteIndex, 10);
+      deleteSlide(index);
+    });
+  });
+
+  // Drag and drop
+  const slides = document.querySelectorAll(".preview__slide");
+  slides.forEach((slide) => {
+    slide.addEventListener("dragstart", handleDragStart);
+    slide.addEventListener("dragover", handleDragOver);
+    slide.addEventListener("drop", handleDrop);
+    slide.addEventListener("dragend", handleDragEnd);
+    slide.addEventListener("dragenter", handleDragEnter);
+    slide.addEventListener("dragleave", handleDragLeave);
+  });
+}
+
+function handleDragStart(e) {
+  draggedSlideIndex = parseInt(e.currentTarget.dataset.slideIndex, 10);
+  e.currentTarget.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/html", e.currentTarget.innerHTML);
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = "move";
+  return false;
+}
+
+function handleDragEnter(e) {
+  e.currentTarget.classList.add("drag-over");
+}
+
+function handleDragLeave(e) {
+  e.currentTarget.classList.remove("drag-over");
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  e.preventDefault();
+
+  const dropIndex = parseInt(e.currentTarget.dataset.slideIndex, 10);
+  
+  if (draggedSlideIndex !== null && draggedSlideIndex !== dropIndex) {
+    // Reorder slides
+    const draggedSlide = state.slides[draggedSlideIndex];
+    state.slides.splice(draggedSlideIndex, 1);
+    state.slides.splice(dropIndex, 0, draggedSlide);
+    
+    // Update active slide index if needed
+    if (state.activeSlideIndex === draggedSlideIndex) {
+      state.activeSlideIndex = dropIndex;
+    } else if (draggedSlideIndex < state.activeSlideIndex && dropIndex >= state.activeSlideIndex) {
+      state.activeSlideIndex--;
+    } else if (draggedSlideIndex > state.activeSlideIndex && dropIndex <= state.activeSlideIndex) {
+      state.activeSlideIndex++;
+    }
+    
+    renderPreview();
+    persistState("reorder-slides");
+    appendStatusLog(`Moved slide ${draggedSlideIndex + 1} to position ${dropIndex + 1}.`);
+  }
+
+  return false;
+}
+
+function handleDragEnd(e) {
+  e.currentTarget.classList.remove("dragging");
+  document.querySelectorAll(".preview__slide").forEach((slide) => {
+    slide.classList.remove("drag-over");
+  });
+  draggedSlideIndex = null;
 }
 
 function updateSettings(reason = "settings") {
@@ -240,9 +379,9 @@ function pollLuaCommands() {
 }
 
 function init() {
-  textarea?.addEventListener("input", onTextareaInput);
-  textarea?.addEventListener("keydown", handleTextareaShortcut);
   insertDelimiterBtn?.addEventListener("click", insertDelimiter);
+  addSlidesBtn?.addEventListener("click", addSlides);
+  clearAllBtn?.addEventListener("click", clearAllSlides);
   cheatsheetBtn?.addEventListener("click", () =>
     window.open("https://www.markdownguide.org/cheat-sheet/", "_blank", "noopener")
   );
@@ -252,8 +391,8 @@ function init() {
   verticalAlignSelect?.addEventListener("change", () => updateSettings("vertical alignment"));
 
   applyStateToUi();
-  renderStatus("Waiting for input", "neutral");
-  appendStatusLog("Dock ready. Start typing to publish slides.");
+  renderStatus("Ready", "success");
+  appendStatusLog("Dock ready. Add slides using the editor.");
   channel.postMessage({ type: "state", source: "dock-ui", payload: state });
   setInterval(pollLuaCommands, 500);
 }
