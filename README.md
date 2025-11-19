@@ -21,7 +21,15 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 
 ## Everyday workflow
 
-- **Edit slides:** Paste or type text, use `---` on a blank line to split slides, tweak font/size/alignment, and preview the Markdown live.
+- **Edit slides:** Paste or type text in the Text input field, use `---` on a blank line to split slides, tweak font/size/alignment, and preview the Markdown live.
+  - **Markdown support:** The text input supports full Markdown syntax including:
+    - **Bold** (`**text**` or `__text__`), *Italic* (`*text*` or `_text_`), ~~Strikethrough~~ (`~~text~~`)
+    - Headings (`# H1`, `## H2`, etc.)
+    - Links (`[text](url)`) and Images (`![alt](url)`)
+    - Lists (unordered with `-`, `*`, `+` and ordered with `1.`)
+    - Code inline (`` `code` ``) and blocks (` ```code``` `)
+    - Blockquotes (`> quote`)
+    - Line breaks are preserved automatically
 - **Local presets:** Press “Save preset” to store the textarea + settings inside localStorage (each portable OBS build keeps its own presets, just like the lower-thirds repo).
 - **Auto-sync:** The dock saves locally ~1 s after edits and broadcasts the same payload over `BroadcastChannel`. Nothing else to click.
 - **Overlay:** The browser source listens to that channel by default (add `?mode=json` only if you need legacy polling for tests).

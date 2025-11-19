@@ -8,7 +8,7 @@ const debugEl = document.querySelector(".debug");
 
 const params = new URLSearchParams(window.location.search);
 const statePath = params.get("statePath") || "../data/slides.state.json";
-const pollInterval = Number(params.get("pollInterval") || "1000");
+const pollInterval = Number(params.get("pollInterval") || "2000"); // Aumentado de 1000ms para 2000ms
 const showDebug = params.get("debug") === "1";
 const showMeta = params.get("showMeta") === "1";
 const supportsChannel = typeof BroadcastChannel !== "undefined";
@@ -16,6 +16,36 @@ let stateMode = (params.get("mode") || (supportsChannel ? "channel" : "json")).t
 
 let lastUpdatedAt = "";
 let currentIndex = -1;
+const loadedFonts = new Set();
+
+// Função para carregar fontes dinamicamente apenas quando necessário
+function loadGoogleFont(fontFamily) {
+  const fontName = fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+  
+  // Mapear fontes do Google Fonts
+  const googleFonts = {
+    'Montserrat': 'Montserrat:wght@400;600;700',
+    'Roboto': 'Roboto:wght@400;700',
+    'Open Sans': 'Open+Sans:wght@400;600;700',
+    'Lato': 'Lato:wght@400;700',
+    'Poppins': 'Poppins:wght@400;600;700',
+    'Raleway': 'Raleway:wght@400;600;700',
+    'Ubuntu': 'Ubuntu:wght@400;700',
+    'Nunito': 'Nunito:wght@400;700',
+    'Playfair Display': 'Playfair+Display:wght@400;700',
+    'Merriweather': 'Merriweather:wght@400;700',
+    'PT Sans': 'PT+Sans:wght@400;700',
+    'Oswald': 'Oswald:wght@400;700'
+  };
+  
+  if (googleFonts[fontName] && !loadedFonts.has(fontName)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${googleFonts[fontName]}&display=swap`;
+    document.head.appendChild(link);
+    loadedFonts.add(fontName);
+  }
+}
 
 if (debugEl && (showDebug || showMeta)) {
   debugEl.hidden = false;
@@ -31,18 +61,38 @@ if (supportsChannel) {
     if (payload.type === "state") {
       handleState(payload.payload);
     }
-  });
+  }, { passive: true });
   channel.postMessage({ type: "request-state", source: "browser-overlay" });
 } else if (stateMode === "channel") {
   console.warn("BroadcastChannel is unavailable; falling back to JSON polling.");
   stateMode = "json";
 }
 
+let lastETag = null;
+let lastModified = null;
+
 async function fetchState() {
   if (stateMode !== "json") return;
   try {
-    const response = await fetch(`${statePath}?t=${Date.now()}`, { cache: "no-store" });
+    // Usar headers condicionais para evitar download desnecessário
+    const headers = {};
+    if (lastETag) headers['If-None-Match'] = lastETag;
+    if (lastModified) headers['If-Modified-Since'] = lastModified;
+    
+    const response = await fetch(`${statePath}?t=${Date.now()}`, { 
+      cache: "no-store",
+      headers
+    });
+    
+    // Se retornar 304, não houve mudanças
+    if (response.status === 304) return;
+    
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    // Armazenar headers para próxima verificação
+    lastETag = response.headers.get('ETag');
+    lastModified = response.headers.get('Last-Modified');
+    
     const data = await response.json();
     handleState(data);
   } catch (error) {
@@ -95,6 +145,9 @@ function applyTypography(slide, settings) {
   const lineHeight = slide.lineHeight || settings.lineHeight || 1.2;
   const verticalAlign = slide.verticalAlign || settings.verticalAlign || "center";
 
+  // Carregar fonte dinamicamente se necessário
+  loadGoogleFont(fontFamily);
+
   bodyEl.style.fontFamily = fontFamily;
   bodyEl.style.textAlign = textAlign;
   bodyEl.style.lineHeight = lineHeight;
@@ -117,8 +170,14 @@ function swapContent(slide, settings) {
   // Update CSS variable for duration
   document.documentElement.style.setProperty("--transition-duration", `${duration}ms`);
   
-  // Remove all transition classes
-  bodyEl.className = "slide-body";
+  // Remove all transition classes and limpar will-change após animação
+  const cleanupClasses = () => {
+    bodyEl.className = "slide-body";
+    // Remover will-change após animação para economizar recursos
+    bodyEl.style.willChange = "auto";
+  };
+  
+  cleanupClasses();
   
   if (transitionType === "none") {
     // No animation, instant change
@@ -133,9 +192,7 @@ function swapContent(slide, settings) {
       bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
       bodyEl.classList.remove("transition-out");
       bodyEl.classList.add("transition-in");
-      setTimeout(() => {
-        bodyEl.classList.remove("transition-in");
-      }, duration);
+      setTimeout(cleanupClasses, duration);
     }, duration / 2);
   } else if (transitionType === "fade") {
     // Sequential fade: fade out completely, then fade in
@@ -144,9 +201,7 @@ function swapContent(slide, settings) {
       bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
       bodyEl.classList.remove("transition-out");
       bodyEl.classList.add("transition-in");
-      setTimeout(() => {
-        bodyEl.classList.remove("transition-in");
-      }, duration);
+      setTimeout(cleanupClasses, duration);
     }, duration);
   } else {
     // All other transitions (slide, zoom, push)
@@ -155,9 +210,7 @@ function swapContent(slide, settings) {
       bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
       bodyEl.classList.remove(`transition-${transitionType}-out`);
       bodyEl.classList.add(`transition-${transitionType}-in`);
-      setTimeout(() => {
-        bodyEl.classList.remove(`transition-${transitionType}-in`);
-      }, duration);
+      setTimeout(cleanupClasses, duration);
     }, duration);
   }
 }
@@ -171,10 +224,12 @@ function updateProgress(durationMs) {
   progressEl.hidden = false;
   progressEl.style.transition = "none";
   progressEl.style.width = "0%";
-  requestAnimationFrame(() => {
+  
+  // Usar setTimeout ao invés de requestAnimationFrame para economia de recursos
+  setTimeout(() => {
     progressEl.style.transition = `width ${durationMs}ms linear`;
     progressEl.style.width = "100%";
-  });
+  }, 10);
 }
 
 function resetProgress() {

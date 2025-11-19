@@ -60,8 +60,9 @@ body {
   );
   line-height: 1.2;
   text-shadow: var(--shadow);
-  transition: opacity var(--transition-ms) ease;
   opacity: 1;
+  /* Remover transição padrão para economizar recursos */
+  /* will-change aplicado apenas durante animações */
 }
 
 .slide-body.is-hidden {
@@ -77,6 +78,11 @@ body {
 }
 
 /* Transition animations */
+/* Usar will-change apenas durante animações ativas */
+.slide-body[class*="transition-"] {
+  will-change: opacity, transform;
+}
+
 /* Crossfade and Fade */
 .slide-body.transition-out {
   animation: fadeOut var(--transition-duration) ease-out forwards;
@@ -86,14 +92,27 @@ body {
   animation: fadeIn var(--transition-duration) ease-in forwards;
 }
 
+/* Usar GPU acceleration com transform */
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from { 
+    opacity: 1; 
+    transform: translateZ(0);
+  }
+  to { 
+    opacity: 0; 
+    transform: translateZ(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0; 
+    transform: translateZ(0);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateZ(0);
+  }
 }
 
 /* Slide Left - Starts from 50% with fade */
@@ -105,14 +124,15 @@ body {
   animation: slideLeftIn var(--transition-duration) ease-out forwards;
 }
 
+/* Adicionar translateZ para GPU acceleration */
 @keyframes slideLeftOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(-50%); opacity: 0; }
+  from { transform: translateX(0) translateZ(0); opacity: 1; }
+  to { transform: translateX(-50%) translateZ(0); opacity: 0; }
 }
 
 @keyframes slideLeftIn {
-  from { transform: translateX(50%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateX(50%) translateZ(0); opacity: 0; }
+  to { transform: translateX(0) translateZ(0); opacity: 1; }
 }
 
 /* Slide Right - Starts from 50% with fade */
@@ -125,13 +145,13 @@ body {
 }
 
 @keyframes slideRightOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(50%); opacity: 0; }
+  from { transform: translateX(0) translateZ(0); opacity: 1; }
+  to { transform: translateX(50%) translateZ(0); opacity: 0; }
 }
 
 @keyframes slideRightIn {
-  from { transform: translateX(-50%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateX(-50%) translateZ(0); opacity: 0; }
+  to { transform: translateX(0) translateZ(0); opacity: 1; }
 }
 
 /* Slide Up - Starts from 50% with fade */
@@ -144,13 +164,13 @@ body {
 }
 
 @keyframes slideUpOut {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-50%); opacity: 0; }
+  from { transform: translateY(0) translateZ(0); opacity: 1; }
+  to { transform: translateY(-50%) translateZ(0); opacity: 0; }
 }
 
 @keyframes slideUpIn {
-  from { transform: translateY(50%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(50%) translateZ(0); opacity: 0; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
 }
 
 /* Slide Down - Starts from 50% with fade */
@@ -163,13 +183,13 @@ body {
 }
 
 @keyframes slideDownOut {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(50%); opacity: 0; }
+  from { transform: translateY(0) translateZ(0); opacity: 1; }
+  to { transform: translateY(50%) translateZ(0); opacity: 0; }
 }
 
 @keyframes slideDownIn {
-  from { transform: translateY(-50%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(-50%) translateZ(0); opacity: 0; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
 }
 
 /* Zoom In */
@@ -182,13 +202,13 @@ body {
 }
 
 @keyframes zoomInOut {
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(1.5); opacity: 0; }
+  from { transform: scale(1) translateZ(0); opacity: 1; }
+  to { transform: scale(1.5) translateZ(0); opacity: 0; }
 }
 
 @keyframes zoomInIn {
-  from { transform: scale(0.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: scale(0.5) translateZ(0); opacity: 0; }
+  to { transform: scale(1) translateZ(0); opacity: 1; }
 }
 
 /* Zoom Out */
@@ -201,13 +221,13 @@ body {
 }
 
 @keyframes zoomOutOut {
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.5); opacity: 0; }
+  from { transform: scale(1) translateZ(0); opacity: 1; }
+  to { transform: scale(0.5) translateZ(0); opacity: 0; }
 }
 
 @keyframes zoomOutIn {
-  from { transform: scale(1.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: scale(1.5) translateZ(0); opacity: 0; }
+  to { transform: scale(1) translateZ(0); opacity: 1; }
 }
 
 /* Push Left - No fade, pure movement */
@@ -220,13 +240,13 @@ body {
 }
 
 @keyframes pushLeftOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(-100%); opacity: 1; }
+  from { transform: translateX(0) translateZ(0); opacity: 1; }
+  to { transform: translateX(-100%) translateZ(0); opacity: 1; }
 }
 
 @keyframes pushLeftIn {
-  from { transform: translateX(100%); opacity: 1; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateX(100%) translateZ(0); opacity: 1; }
+  to { transform: translateX(0) translateZ(0); opacity: 1; }
 }
 
 /* Push Right - No fade, pure movement */
@@ -239,13 +259,13 @@ body {
 }
 
 @keyframes pushRightOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 1; }
+  from { transform: translateX(0) translateZ(0); opacity: 1; }
+  to { transform: translateX(100%) translateZ(0); opacity: 1; }
 }
 
 @keyframes pushRightIn {
-  from { transform: translateX(-100%); opacity: 1; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateX(-100%) translateZ(0); opacity: 1; }
+  to { transform: translateX(0) translateZ(0); opacity: 1; }
 }
 
 /* Push Up - No fade, pure movement */
@@ -258,13 +278,13 @@ body {
 }
 
 @keyframes pushUpOut {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-100%); opacity: 1; }
+  from { transform: translateY(0) translateZ(0); opacity: 1; }
+  to { transform: translateY(-100%) translateZ(0); opacity: 1; }
 }
 
 @keyframes pushUpIn {
-  from { transform: translateY(100%); opacity: 1; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(100%) translateZ(0); opacity: 1; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
 }
 
 /* Push Down - No fade, pure movement */
@@ -277,13 +297,13 @@ body {
 }
 
 @keyframes pushDownOut {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(100%); opacity: 1; }
+  from { transform: translateY(0) translateZ(0); opacity: 1; }
+  to { transform: translateY(100%) translateZ(0); opacity: 1; }
 }
 
 @keyframes pushDownIn {
-  from { transform: translateY(-100%); opacity: 1; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(-100%) translateZ(0); opacity: 1; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
 }
 
 .slide-progress {

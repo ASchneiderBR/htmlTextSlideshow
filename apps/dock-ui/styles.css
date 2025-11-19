@@ -240,6 +240,65 @@ textarea {
   margin-top: 12px;
 }
 
+.markdown-help {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(47, 129, 247, 0.05);
+  overflow: hidden;
+}
+
+.markdown-help summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text);
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.markdown-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.markdown-help summary:hover {
+  background: rgba(47, 129, 247, 0.1);
+}
+
+.markdown-help[open] summary {
+  border-bottom: 1px solid var(--border);
+  background: rgba(47, 129, 247, 0.08);
+}
+
+.markdown-help__list {
+  list-style: none;
+  padding: 10px 12px;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.markdown-help__list li {
+  color: var(--text);
+  padding: 4px 0;
+}
+
+.markdown-help__list code {
+  background: #0b1320;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
 .btn {
   padding: 8px 16px;
   border-radius: 8px;

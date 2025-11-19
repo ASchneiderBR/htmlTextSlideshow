@@ -1,1 +1,1 @@
-window.__obsTextSlidesHotkey={seq:99,command:'next',updatedAt:'2025-11-19T22:00:07.000Z'};
+window.__obsTextSlidesHotkey={seq:1,command:null,updatedAt:'2025-11-19T22:06:41.000Z'};

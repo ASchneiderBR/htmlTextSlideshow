@@ -5,9 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OBS Text Slides Dock</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Poppins:wght@400;600;700&family=Raleway:wght@400;600;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=PT+Sans:wght@400;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Fonts carregadas dinamicamente via JavaScript para reduzir uso inicial de recursos -->
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -121,6 +119,22 @@
             placeholder="Paste your text here. Use --- on a blank line to create multiple slides."
             spellcheck="false"
           ></textarea>
+          <details class="markdown-help">
+            <summary>📝 Markdown syntax supported</summary>
+            <ul class="markdown-help__list">
+              <li><code>**bold**</code> or <code>__bold__</code> → <strong>bold</strong></li>
+              <li><code>*italic*</code> or <code>_italic_</code> → <em>italic</em></li>
+              <li><code>~~strike~~</code> → <del>strikethrough</del></li>
+              <li><code># Heading</code> → Headings (H1-H6)</li>
+              <li><code>[text](url)</code> → Links</li>
+              <li><code>![alt](url)</code> → Images</li>
+              <li><code>- item</code> → Unordered lists</li>
+              <li><code>1. item</code> → Ordered lists</li>
+              <li><code>`code`</code> → Inline code</li>
+              <li><code>```code```</code> → Code blocks</li>
+              <li><code>&gt; quote</code> → Blockquotes</li>
+            </ul>
+          </details>
           <button type="button" class="btn btn--primary" data-action="add-slides">Add slides</button>
         </section>
         <section class="panel panel--preview">

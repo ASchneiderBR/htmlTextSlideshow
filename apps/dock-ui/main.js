@@ -23,6 +23,52 @@ const DELIMITER = "\n\n---\n\n";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+// Função debounce para otimizar atualizações frequentes
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Função throttle para limitar execuções
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+// Cache para renderização de markdown
+const markdownCache = new Map();
+const MAX_CACHE_SIZE = 100;
+
+function cachedMarkdownToHtml(markdown) {
+  if (markdownCache.has(markdown)) {
+    return markdownCache.get(markdown);
+  }
+  
+  const html = markdownToHtml(markdown);
+  
+  // Limitar tamanho do cache
+  if (markdownCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = markdownCache.keys().next().value;
+    markdownCache.delete(firstKey);
+  }
+  
+  markdownCache.set(markdown, html);
+  return html;
+}
+
 const DEFAULT_STATE = {
   version: "1.0.0",
   updatedAt: new Date().toISOString(),
@@ -84,7 +130,7 @@ channel.addEventListener("message", (event) => {
     channel.postMessage({ type: "state", source: "dock-ui", payload: state });
     appendStatusLog("Shared current state with overlay.");
   }
-});
+}, { passive: true });
 
 function loadStateFromStorage() {
   try {
@@ -140,6 +186,10 @@ function renderPreview() {
     return;
   }
 
+  // Usar DocumentFragment para melhor performance
+  const fragment = document.createDocumentFragment();
+  const tempDiv = document.createElement('div');
+  
   const html = state.slides
     .map(
       (slide, index) => `
@@ -154,13 +204,19 @@ function renderPreview() {
             <button type="button" class="preview__slide-delete" data-delete-index="${index}" title="Delete this slide">Delete</button>
           </div>
         </div>
-        <div class="preview__slide-content">${markdownToHtml(slide.raw || "")}</div>
+        <div class="preview__slide-content">${cachedMarkdownToHtml(slide.raw || "")}</div>
       </article>
     `
     )
     .join("");
   
-  preview.innerHTML = html;
+  tempDiv.innerHTML = html;
+  while (tempDiv.firstChild) {
+    fragment.appendChild(tempDiv.firstChild);
+  }
+  
+  preview.innerHTML = '';
+  preview.appendChild(fragment);
   
   if (previewCountEl) {
     previewCountEl.textContent = `${state.slides.length} ${
@@ -257,7 +313,7 @@ function attachSlideEventListeners() {
       e.stopPropagation();
       const index = parseInt(btn.dataset.playIndex, 10);
       setActiveSlide(index, "manual-play");
-    });
+    }, { passive: false });
   });
 
   // Delete buttons
@@ -267,18 +323,18 @@ function attachSlideEventListeners() {
       e.stopPropagation();
       const index = parseInt(btn.dataset.deleteIndex, 10);
       deleteSlide(index);
-    });
+    }, { passive: false });
   });
 
-  // Drag and drop
+  // Drag and drop - não pode ser passive pois usa preventDefault
   const slides = document.querySelectorAll(".preview__slide");
   slides.forEach((slide) => {
-    slide.addEventListener("dragstart", handleDragStart);
-    slide.addEventListener("dragover", handleDragOver);
-    slide.addEventListener("drop", handleDrop);
-    slide.addEventListener("dragend", handleDragEnd);
-    slide.addEventListener("dragenter", handleDragEnter);
-    slide.addEventListener("dragleave", handleDragLeave);
+    slide.addEventListener("dragstart", handleDragStart, { passive: true });
+    slide.addEventListener("dragover", handleDragOver, { passive: false }); // Precisa preventDefault
+    slide.addEventListener("drop", handleDrop, { passive: false }); // Precisa preventDefault
+    slide.addEventListener("dragend", handleDragEnd, { passive: true });
+    slide.addEventListener("dragenter", handleDragEnter, { passive: true });
+    slide.addEventListener("dragleave", handleDragLeave, { passive: true });
   });
 }
 
@@ -354,17 +410,27 @@ function updateSettings(reason = "settings") {
   persistState(reason);
 }
 
+// Versões com debounce para inputs que atualizam frequentemente
+const debouncedUpdateSettings = debounce(updateSettings, 300);
+
 function renderStatus(text, tone = "neutral") {
   if (!statusPill) return;
   statusPill.textContent = text;
   statusPill.className = `pill pill--${tone}`;
 }
 
+const MAX_LOG_ENTRIES = 50; // Limitar histórico de logs
+
 function appendStatusLog(message) {
   if (!statusLogEl) return;
   const entry = document.createElement("li");
   entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
   statusLogEl.prepend(entry);
+  
+  // Remover entradas antigas para economizar memória
+  while (statusLogEl.children.length > MAX_LOG_ENTRIES) {
+    statusLogEl.removeChild(statusLogEl.lastChild);
+  }
 }
 
 
@@ -377,10 +443,15 @@ function setActiveSlide(index, reason = "manual") {
   persistState(reason);
 }
 
+let pendingScript = null;
+
 function pollLuaCommands() {
-  const script = document.createElement("script");
-  script.src = `../../data/hotkeys.js?t=${Date.now()}`;
-  script.onload = () => {
+  // Evitar criar múltiplos scripts pendentes
+  if (pendingScript) return;
+  
+  pendingScript = document.createElement("script");
+  pendingScript.src = `../../data/hotkeys.js?t=${Date.now()}`;
+  pendingScript.onload = () => {
     const payload = window.__obsTextSlidesHotkey;
     if (payload && typeof payload.seq === "number" && payload.seq > luaSeq) {
       luaSeq = payload.seq;
@@ -392,10 +463,18 @@ function pollLuaCommands() {
         setActiveSlide(payload.command, "lua-jump");
       }
     }
-    script.remove();
+    if (pendingScript) {
+      pendingScript.remove();
+      pendingScript = null;
+    }
   };
-  script.onerror = () => script.remove();
-  document.body.appendChild(script);
+  pendingScript.onerror = () => {
+    if (pendingScript) {
+      pendingScript.remove();
+      pendingScript = null;
+    }
+  };
+  document.body.appendChild(pendingScript);
 }
 
 function init() {
@@ -403,17 +482,17 @@ function init() {
   addSlidesBtn?.addEventListener("click", addSlides);
   clearAllBtn?.addEventListener("click", clearAllSlides);
   fontSelect?.addEventListener("change", () => updateSettings("font family"));
-  fontSizeInput?.addEventListener("input", () => updateSettings("font size"));
+  fontSizeInput?.addEventListener("input", () => debouncedUpdateSettings("font size"));
   textAlignSelect?.addEventListener("change", () => updateSettings("horizontal alignment"));
   verticalAlignSelect?.addEventListener("change", () => updateSettings("vertical alignment"));
   transitionTypeSelect?.addEventListener("change", () => updateSettings("transition type"));
-  transitionDurationInput?.addEventListener("input", () => updateSettings("transition duration"));
+  transitionDurationInput?.addEventListener("input", () => debouncedUpdateSettings("transition duration"));
 
   applyStateToUi();
   renderStatus("Ready", "success");
   appendStatusLog("Dock ready. Add slides using the editor.");
   channel.postMessage({ type: "state", source: "dock-ui", payload: state });
-  setInterval(pollLuaCommands, 500);
+  setInterval(pollLuaCommands, 1000); // Aumentado de 500ms para 1000ms
 }
 
 init();
