@@ -61,8 +61,8 @@ body {
   line-height: 1.2;
   text-shadow: var(--shadow);
   opacity: 1;
-  /* Remover transição padrão para economizar recursos */
-  /* will-change aplicado apenas durante animações */
+  /* Remove default transition to save resources */
+  /* will-change applied only during animations */
 }
 
 .slide-body.is-hidden {
@@ -78,7 +78,7 @@ body {
 }
 
 /* Transition animations */
-/* Usar will-change apenas durante animações ativas */
+/* Use will-change only during active animations */
 .slide-body[class*="transition-"] {
   will-change: opacity, transform;
 }

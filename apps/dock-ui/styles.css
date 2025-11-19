@@ -395,7 +395,7 @@ textarea {
   min-height: 200px;
 }
 
-/* Estilização da scrollbar para melhor aparência e usabilidade */
+/* Scrollbar styling for better appearance and usability */
 .preview__slides::-webkit-scrollbar {
   width: 12px;
 }

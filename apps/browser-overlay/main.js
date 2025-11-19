@@ -8,7 +8,7 @@ const debugEl = document.querySelector(".debug");
 
 const params = new URLSearchParams(window.location.search);
 const statePath = params.get("statePath") || "../data/slides.state.json";
-const pollInterval = Number(params.get("pollInterval") || "2000"); // Aumentado de 1000ms para 2000ms
+const pollInterval = Number(params.get("pollInterval") || "2000"); // Increased from 1000ms to 2000ms
 const showDebug = params.get("debug") === "1";
 const showMeta = params.get("showMeta") === "1";
 const supportsChannel = typeof BroadcastChannel !== "undefined";
@@ -18,11 +18,11 @@ let lastUpdatedAt = "";
 let currentIndex = -1;
 const loadedFonts = new Set();
 
-// Função para carregar fontes dinamicamente apenas quando necessário
+// Function to load fonts dynamically only when needed
 function loadGoogleFont(fontFamily) {
   const fontName = fontFamily.split(',')[0].replace(/['"]/g, '').trim();
   
-  // Mapear fontes do Google Fonts
+  // Map Google Fonts
   const googleFonts = {
     'Montserrat': 'Montserrat:wght@400;600;700',
     'Roboto': 'Roboto:wght@400;700',
@@ -74,7 +74,7 @@ let lastModified = null;
 async function fetchState() {
   if (stateMode !== "json") return;
   try {
-    // Usar headers condicionais para evitar download desnecessário
+    // Use conditional headers to avoid unnecessary downloads
     const headers = {};
     if (lastETag) headers['If-None-Match'] = lastETag;
     if (lastModified) headers['If-Modified-Since'] = lastModified;
@@ -84,12 +84,12 @@ async function fetchState() {
       headers
     });
     
-    // Se retornar 304, não houve mudanças
+    // If returns 304, no changes
     if (response.status === 304) return;
     
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
-    // Armazenar headers para próxima verificação
+    // Store headers for next check
     lastETag = response.headers.get('ETag');
     lastModified = response.headers.get('Last-Modified');
     
@@ -145,7 +145,7 @@ function applyTypography(slide, settings) {
   const lineHeight = slide.lineHeight || settings.lineHeight || 1.2;
   const verticalAlign = slide.verticalAlign || settings.verticalAlign || "center";
 
-  // Carregar fonte dinamicamente se necessário
+  // Load font dynamically if needed
   loadGoogleFont(fontFamily);
 
   bodyEl.style.fontFamily = fontFamily;
@@ -170,10 +170,10 @@ function swapContent(slide, settings) {
   // Update CSS variable for duration
   document.documentElement.style.setProperty("--transition-duration", `${duration}ms`);
   
-  // Remove all transition classes and limpar will-change após animação
+  // Remove all transition classes and clean will-change after animation
   const cleanupClasses = () => {
     bodyEl.className = "slide-body";
-    // Remover will-change após animação para economizar recursos
+    // Remove will-change after animation to save resources
     bodyEl.style.willChange = "auto";
   };
   
@@ -225,7 +225,7 @@ function updateProgress(durationMs) {
   progressEl.style.transition = "none";
   progressEl.style.width = "0%";
   
-  // Usar setTimeout ao invés de requestAnimationFrame para economia de recursos
+  // Use setTimeout instead of requestAnimationFrame to save resources
   setTimeout(() => {
     progressEl.style.transition = `width ${durationMs}ms linear`;
     progressEl.style.width = "100%";

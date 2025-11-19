@@ -15,7 +15,7 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 
 1. Clone or download this repository anywhere OBS can reach (e.g., `D:\OBS\text-slideshow`).
 2. Add a **Custom Browser Dock** in OBS that points to `apps/dock-ui/index.html`.
-3. Add a **Browser Source** pointing to the overlay via a `file:///…` URL (example: `file:///D:/GitHub/obs-htmlTextSlideshow/apps/browser-overlay/index.html`). OBS Browser Source sempre espera uma URL, então use o formato `file:///caminho/até/index.html` (não “Local file”). Ajuste a largura/altura para o canvas desejado (e.g., `800x200`). O overlay auto-fits o texto à viewport que você definir.
+3. Add a **Browser Source** pointing to the overlay via a `file:///…` URL (example: `file:///D:/GitHub/obs-htmlTextSlideshow/apps/browser-overlay/index.html`). OBS Browser Source always expects a URL, so use the format `file:///path/to/index.html` (not "Local file"). Adjust the width/height for the desired canvas (e.g., `800x200`). The overlay auto-fits the text to the viewport you define.
 4. Load the Lua script from `lua/obs-text-slides.lua` through `Tools → Scripts`. Bind any hotkeys you like for "Next"/"Previous"/"First"; the script mirrors Animated Lower Thirds by writing to `data/hotkeys.js`.
 5. Start typing inside the dock. Slides live in OBS’s localStorage, are auto-saved ~1 s after edits, and are pushed to every overlay over `BroadcastChannel`—no file prompts or manual publishing.
 

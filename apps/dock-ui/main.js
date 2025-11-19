@@ -24,7 +24,7 @@ const DELIMITER = "\n\n---\n\n";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
-// Função debounce para otimizar atualizações frequentes
+// Debounce function to optimize frequent updates
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -37,7 +37,7 @@ function debounce(func, wait) {
   };
 }
 
-// Função throttle para limitar execuções
+// Throttle function to limit executions
 function throttle(func, limit) {
   let inThrottle;
   return function(...args) {
@@ -49,7 +49,7 @@ function throttle(func, limit) {
   };
 }
 
-// Cache para renderização de markdown
+// Cache for markdown rendering
 const markdownCache = new Map();
 const MAX_CACHE_SIZE = 100;
 
@@ -60,7 +60,7 @@ function cachedMarkdownToHtml(markdown) {
   
   const html = markdownToHtml(markdown);
   
-  // Limitar tamanho do cache
+  // Limit cache size
   if (markdownCache.size >= MAX_CACHE_SIZE) {
     const firstKey = markdownCache.keys().next().value;
     markdownCache.delete(firstKey);
@@ -188,10 +188,10 @@ function renderPreview() {
     return;
   }
 
-  // Salvar posição do scroll antes de re-renderizar
+  // Save scroll position before re-rendering
   const scrollTop = preview.scrollTop;
   
-  // Usar DocumentFragment para melhor performance
+  // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
   const tempDiv = document.createElement('div');
   
@@ -223,7 +223,7 @@ function renderPreview() {
   preview.innerHTML = '';
   preview.appendChild(fragment);
   
-  // Restaurar posição do scroll
+  // Restore scroll position
   preview.scrollTop = scrollTop;
   
   if (previewCountEl) {
@@ -334,12 +334,12 @@ function attachSlideEventListeners() {
     }, { passive: false });
   });
 
-  // Drag and drop - não pode ser passive pois usa preventDefault
+  // Drag and drop - cannot be passive because it uses preventDefault
   const slides = document.querySelectorAll(".preview__slide");
   slides.forEach((slide) => {
     slide.addEventListener("dragstart", handleDragStart, { passive: true });
-    slide.addEventListener("dragover", handleDragOver, { passive: false }); // Precisa preventDefault
-    slide.addEventListener("drop", handleDrop, { passive: false }); // Precisa preventDefault
+    slide.addEventListener("dragover", handleDragOver, { passive: false }); // Needs preventDefault
+    slide.addEventListener("drop", handleDrop, { passive: false }); // Needs preventDefault
     slide.addEventListener("dragend", handleDragEnd, { passive: true });
     slide.addEventListener("dragenter", handleDragEnter, { passive: true });
     slide.addEventListener("dragleave", handleDragLeave, { passive: true });
@@ -438,7 +438,7 @@ function updateLoopButton() {
   }
 }
 
-// Versões com debounce para inputs que atualizam frequentemente
+// Debounced versions for inputs that update frequently
 const debouncedUpdateSettings = debounce(updateSettings, 300);
 
 function renderStatus(text, tone = "neutral") {
@@ -447,7 +447,7 @@ function renderStatus(text, tone = "neutral") {
   statusPill.className = `pill pill--${tone}`;
 }
 
-const MAX_LOG_ENTRIES = 50; // Limitar histórico de logs
+const MAX_LOG_ENTRIES = 50; // Limit log history
 
 function appendStatusLog(message) {
   if (!statusLogEl) return;
@@ -455,7 +455,7 @@ function appendStatusLog(message) {
   entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
   statusLogEl.prepend(entry);
   
-  // Remover entradas antigas para economizar memória
+  // Remove old entries to save memory
   while (statusLogEl.children.length > MAX_LOG_ENTRIES) {
     statusLogEl.removeChild(statusLogEl.lastChild);
   }
@@ -476,14 +476,14 @@ function handleNextSlide(reason = "manual") {
   
   const nextIndex = state.activeSlideIndex + 1;
   
-  // Se estiver no último slide
+  // If on the last slide
   if (nextIndex >= state.slides.length) {
-    // Se loop estiver ativado, volta ao primeiro
+    // If loop is enabled, return to first
     if (state.playlist?.loop) {
       setActiveSlide(0, reason);
       appendStatusLog("Loop: returned to first slide.");
     }
-    // Se não, não faz nada (permanece no último)
+    // Otherwise, do nothing (stay on last slide)
   } else {
     setActiveSlide(nextIndex, reason);
   }
@@ -492,7 +492,7 @@ function handleNextSlide(reason = "manual") {
 let pendingScript = null;
 
 function pollLuaCommands() {
-  // Evitar criar múltiplos scripts pendentes
+  // Avoid creating multiple pending scripts
   if (pendingScript) return;
   
   pendingScript = document.createElement("script");
@@ -541,7 +541,7 @@ function init() {
   renderStatus("Ready", "success");
   appendStatusLog("Dock ready. Add slides using the editor.");
   channel.postMessage({ type: "state", source: "dock-ui", payload: state });
-  setInterval(pollLuaCommands, 1000); // Aumentado de 500ms para 1000ms
+  setInterval(pollLuaCommands, 1000); // Increased from 500ms to 1000ms
 }
 
 init();
