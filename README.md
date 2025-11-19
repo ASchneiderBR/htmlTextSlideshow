@@ -16,7 +16,7 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 1. Clone or download this repository anywhere OBS can reach (e.g., `D:\OBS\text-slideshow`).
 2. Add a **Custom Browser Dock** in OBS that points to `apps/dock-ui/index.html`.
 3. Add a **Browser Source** pointing to the overlay via a `file:///…` URL (example: `file:///D:/GitHub/obs-htmlTextSlideshow/apps/browser-overlay/index.html`). OBS Browser Source sempre espera uma URL, então use o formato `file:///caminho/até/index.html` (não “Local file”). Ajuste a largura/altura para o canvas desejado (e.g., `800x200`). O overlay auto-fits o texto à viewport que você definir.
-4. Load the Lua script from `lua/obs-text-slides.lua` through `Tools → Scripts`. Bind any hotkeys you like for “Next”/“Previous”; the script mirrors Animated Lower Thirds by writing to `data/hotkeys.js`.
+4. Load the Lua script from `lua/obs-text-slides.lua` through `Tools → Scripts`. Bind any hotkeys you like for "Next"/"Previous"/"First"; the script mirrors Animated Lower Thirds by writing to `data/hotkeys.js`.
 5. Start typing inside the dock. Slides live in OBS’s localStorage, are auto-saved ~1 s after edits, and are pushed to every overlay over `BroadcastChannel`—no file prompts or manual publishing.
 
 ## Everyday workflow
@@ -33,7 +33,8 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 - **Local presets:** Press “Save preset” to store the textarea + settings inside localStorage (each portable OBS build keeps its own presets, just like the lower-thirds repo).
 - **Auto-sync:** The dock saves locally ~1 s after edits and broadcasts the same payload over `BroadcastChannel`. Nothing else to click.
 - **Overlay:** The browser source listens to that channel by default (add `?mode=json` only if you need legacy polling for tests).
-- **Lua hotkeys:** Bind “Next” and “Previous” in OBS. The script overwrites `data/hotkeys.js`, the dock polls it (just like the original lower thirds), and applies the commands.
+- **Lua hotkeys:** Bind "Next", "Previous", and "First" in OBS. The script overwrites `data/hotkeys.js`, the dock polls it (just like the original lower thirds), and applies the commands.
+- **Loop control:** Enable/disable the "Loop" checkbox in the slides preview section to automatically restart at the first slide when reaching the end (default: enabled).
 
 ### Testing outside OBS
 

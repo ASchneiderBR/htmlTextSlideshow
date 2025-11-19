@@ -2,18 +2,20 @@ obs = obslua
 
 local hotkeys = {
   next = nil,
-  prev = nil
+  prev = nil,
+  first = nil
 }
 
 local command_seq = 0
 
 local function script_description()
   return [[
-Simple hotkey relay that sends “next” and “previous” commands to the control panel / browser source.
+Simple hotkey relay that sends "next", "previous" and "first" commands to the control panel / browser source.
 
 Hotkeys:
 - Next slide
 - Previous slide
+- First slide
 
 The dock polls data/hotkeys.js (overwritten by this script) just like Animated Lower Thirds.
 ]]
@@ -50,6 +52,11 @@ local function prev_pressed(pressed)
   write_command("'prev'")
 end
 
+local function first_pressed(pressed)
+  if not pressed then return end
+  write_command("'first'")
+end
+
 function script_properties()
   local props = obs.obs_properties_create()
   return props
@@ -64,25 +71,33 @@ end
 function script_load(settings_data)
   hotkeys.next = obs.obs_hotkey_register_frontend("text_slides_next", "Text Slides: Next", next_pressed)
   hotkeys.prev = obs.obs_hotkey_register_frontend("text_slides_prev", "Text Slides: Previous", prev_pressed)
+  hotkeys.first = obs.obs_hotkey_register_frontend("text_slides_first", "Text Slides: First", first_pressed)
   local next_saved = obs.obs_data_get_array(settings_data, "text_slides_next")
   local prev_saved = obs.obs_data_get_array(settings_data, "text_slides_prev")
+  local first_saved = obs.obs_data_get_array(settings_data, "text_slides_first")
   obs.obs_hotkey_load(hotkeys.next, next_saved)
   obs.obs_hotkey_load(hotkeys.prev, prev_saved)
+  obs.obs_hotkey_load(hotkeys.first, first_saved)
   obs.obs_data_array_release(next_saved)
   obs.obs_data_array_release(prev_saved)
+  obs.obs_data_array_release(first_saved)
   write_command("null")
 end
 
 function script_save(settings_data)
   local next_array = obs.obs_hotkey_save(hotkeys.next)
   local prev_array = obs.obs_hotkey_save(hotkeys.prev)
+  local first_array = obs.obs_hotkey_save(hotkeys.first)
   obs.obs_data_set_array(settings_data, "text_slides_next", next_array)
   obs.obs_data_set_array(settings_data, "text_slides_prev", prev_array)
+  obs.obs_data_set_array(settings_data, "text_slides_first", first_array)
   obs.obs_data_array_release(next_array)
   obs.obs_data_array_release(prev_array)
+  obs.obs_data_array_release(first_array)
 end
 
 function script_unload()
   obs.obs_hotkey_unregister(next_pressed)
   obs.obs_hotkey_unregister(prev_pressed)
+  obs.obs_hotkey_unregister(first_pressed)
 end

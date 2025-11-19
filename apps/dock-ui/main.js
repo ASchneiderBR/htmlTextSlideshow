@@ -14,6 +14,7 @@ const textAlignSelect = document.querySelector("#textAlign");
 const verticalAlignSelect = document.querySelector("#verticalAlign");
 const transitionTypeSelect = document.querySelector("#transitionType");
 const transitionDurationInput = document.querySelector("#transitionDuration");
+const loopBtn = document.querySelector("[data-action='toggle-loop']");
 const statusPill = document.querySelector("[data-status-pill]");
 
 let draggedSlideIndex = null;
@@ -171,6 +172,7 @@ function applyStateToUi() {
   if (verticalAlignSelect) verticalAlignSelect.value = state.settings.verticalAlign;
   if (transitionTypeSelect) transitionTypeSelect.value = state.settings.transitionType || "crossfade";
   if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
+  updateLoopButton();
   renderPreview();
   updateClearAllButton();
 }
@@ -416,6 +418,26 @@ function updateSettings(reason = "settings") {
   persistState(reason);
 }
 
+function toggleLoop() {
+  if (!state.playlist) state.playlist = { mode: "manual", loop: true, autoAdvanceMs: 0 };
+  state.playlist.loop = !state.playlist.loop;
+  updateLoopButton();
+  persistState("loop setting");
+  appendStatusLog(`Loop ${state.playlist.loop ? 'enabled' : 'disabled'}.`);
+}
+
+function updateLoopButton() {
+  if (!loopBtn) return;
+  const isLoopEnabled = state.playlist?.loop ?? true;
+  loopBtn.dataset.loopEnabled = String(isLoopEnabled);
+  
+  if (isLoopEnabled) {
+    loopBtn.classList.add("btn--info");
+  } else {
+    loopBtn.classList.remove("btn--info");
+  }
+}
+
 // Versões com debounce para inputs que atualizam frequentemente
 const debouncedUpdateSettings = debounce(updateSettings, 300);
 
@@ -449,6 +471,24 @@ function setActiveSlide(index, reason = "manual") {
   persistState(reason);
 }
 
+function handleNextSlide(reason = "manual") {
+  if (!state.slides.length) return;
+  
+  const nextIndex = state.activeSlideIndex + 1;
+  
+  // Se estiver no último slide
+  if (nextIndex >= state.slides.length) {
+    // Se loop estiver ativado, volta ao primeiro
+    if (state.playlist?.loop) {
+      setActiveSlide(0, reason);
+      appendStatusLog("Loop: returned to first slide.");
+    }
+    // Se não, não faz nada (permanece no último)
+  } else {
+    setActiveSlide(nextIndex, reason);
+  }
+}
+
 let pendingScript = null;
 
 function pollLuaCommands() {
@@ -462,9 +502,11 @@ function pollLuaCommands() {
     if (payload && typeof payload.seq === "number" && payload.seq > luaSeq) {
       luaSeq = payload.seq;
       if (payload.command === "next") {
-        setActiveSlide(state.activeSlideIndex + 1, "lua-next");
+        handleNextSlide("lua-next");
       } else if (payload.command === "prev") {
         setActiveSlide(state.activeSlideIndex - 1, "lua-prev");
+      } else if (payload.command === "first") {
+        setActiveSlide(0, "lua-first");
       } else if (typeof payload.command === "number") {
         setActiveSlide(payload.command, "lua-jump");
       }
@@ -487,6 +529,7 @@ function init() {
   insertDelimiterBtn?.addEventListener("click", insertDelimiter);
   addSlidesBtn?.addEventListener("click", addSlides);
   clearAllBtn?.addEventListener("click", clearAllSlides);
+  loopBtn?.addEventListener("click", toggleLoop);
   fontSelect?.addEventListener("change", () => updateSettings("font family"));
   fontSizeInput?.addEventListener("input", () => debouncedUpdateSettings("font size"));
   textAlignSelect?.addEventListener("change", () => updateSettings("horizontal alignment"));
@@ -502,4 +545,5 @@ function init() {
 }
 
 init();
+
 

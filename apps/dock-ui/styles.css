@@ -343,6 +343,17 @@ textarea {
   border-color: #ff6b63;
 }
 
+.btn--info {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn--info:hover:not(:disabled) {
+  background: #4a91ff;
+  border-color: #4a91ff;
+}
+
 .btn--small {
   padding: 4px 10px;
   font-size: 0.75rem;

@@ -9,8 +9,9 @@
 
 | Action | Default | Behavior |
 | --- | --- | --- |
-| Next slide | `Ctrl+Right` | Writes `{command: 'next'}` to `data/hotkeys.js`. |
+| Next slide | `Ctrl+Right` | Writes `{command: 'next'}` to `data/hotkeys.js`. Respects loop setting when at the end. |
 | Previous slide | `Ctrl+Left` | Writes `{command: 'prev'}` to `data/hotkeys.js`. |
+| First slide | (unbound) | Writes `{command: 'first'}` to `data/hotkeys.js`. Jumps to the first slide. |
 
 Implementation details:
 
@@ -27,6 +28,12 @@ Implementation details:
 
 - If `data/hotkeys.js` can’t be opened, log a warning in OBS (usually caused by read-only folders or antivirus locks).
 - If nothing happens when pressing a hotkey, confirm that the dock log shows “Shared current state…” and that the polling interval is running (500 ms by default).
+
+## Loop Behavior
+
+When the "Loop" checkbox is enabled in the dock UI (default: enabled):
+- Pressing "Next" on the last slide will jump back to the first slide automatically.
+- When disabled, pressing "Next" on the last slide has no effect (stays on the last slide).
 
 ## Future Enhancements
 
