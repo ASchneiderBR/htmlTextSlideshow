@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OBS Text Slides Dock</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app" data-state="boot">
+      <main class="app__main">
+        <section class="panel panel--sidebar">
+          <h2>Typography</h2>
+          <div class="panel--settings">
+            <label>
+              Font family
+              <select id="fontFamily">
+                <option value="Inter, 'Segoe UI', sans-serif">Inter / System stack</option>
+                <option value="Arial, Helvetica, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+                <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
+                <option value="Verdana, Geneva, Tahoma, sans-serif">Verdana</option>
+                <option value="Tahoma, Verdana, Segoe, sans-serif">Tahoma</option>
+                <option value="'Trebuchet MS', 'Lucida Sans', Arial, sans-serif">Trebuchet MS</option>
+                <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="'Source Serif 4', 'Times New Roman', serif">Source Serif</option>
+                <option value="Garamond, Baskerville, 'Times New Roman', serif">Garamond</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+                <option value="'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace">JetBrains Mono</option>
+                <option value="Consolas, 'Courier New', monospace">Consolas</option>
+                <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans MS</option>
+                <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+                <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
+                <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+              </select>
+            </label>
+            <label>
+              Font size (px)
+              <input id="fontSize" type="number" min="18" max="120" value="42" />
+            </label>
+            <label>
+              Horizontal alignment
+              <select id="textAlign">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <label>
+              Vertical alignment
+              <select id="verticalAlign">
+                <option value="flex-start">Top</option>
+                <option value="center" selected>Middle</option>
+                <option value="flex-end">Bottom</option>
+              </select>
+            </label>
+          </div>
+        </section>
+        <section class="panel panel--editor">
+          <header class="panel__header">
+            <h2>Markdown editor</h2>
+            <div class="toolbar">
+              <button type="button" data-action="insert-delimiter">Insert ---</button>
+              <button type="button" data-action="open-cheatsheet">Markdown cheatsheet</button>
+            </div>
+          </header>
+          <textarea
+            id="slidesTextarea"
+            placeholder="Paste your text here. Use --- on a blank line to start the next slide."
+            spellcheck="false"
+          ></textarea>
+        </section>
+        <section class="panel panel--preview">
+          <header class="panel__header">
+            <h2>Live markdown preview</h2>
+            <span class="preview__count" data-preview-count>0 slides</span>
+          </header>
+          <div id="preview" class="preview">
+            <p>Start typing on the left to see formatted slides.</p>
+          </div>
+        </section>
+      </main>
+      <details class="panel panel--status">
+        <summary class="status__summary">
+          <header class="panel__header">
+            <h2>Status</h2>
+            <span class="pill pill--success" data-status-pill>Booting</span>
+          </header>
+        </summary>
+        <div class="status__body">
+          <div class="status__meta">
+            <span class="target__label">Storage</span>
+            <code class="target__path">Local (per OBS instance)</code>
+          </div>
+          <ul id="statusLog" class="list list--log">
+            <li>[Init] Waiting for editor input…</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <script src="main.js" type="module"></script>
+  </body>
+</html>
+

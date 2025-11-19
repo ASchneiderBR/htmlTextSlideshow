@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2025-11-19T19:41:10.000Z",
+  "metadata": {
+    "source": "scaffold",
+    "notes": "Sample data bundled with the repo.",
+    "lastWriter": "bootstrap"
+  },
+  "settings": {
+    "defaultFontFamily": "Inter, 'Segoe UI', sans-serif",
+    "defaultFontSizePx": 36,
+    "lineHeight": 1.25,
+    "textAlign": "center",
+    "markdown": true,
+    "transition": "fade",
+    "pollIntervalMs": 1000
+  },
+  "slides": [
+    {
+      "id": "slide-001",
+      "title": "Welcome",
+      "body": "### Hello!\nUse `---` on a blank line to create the next slide.",
+      "raw": "Welcome\n\n### Hello!\nUse `---` on a blank line to create the next slide.",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": null,
+      "notes": "",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-002",
+      "title": "Demo",
+      "body": "- Edit everything inside the dock\n- Auto-sync pushes changes every second",
+      "raw": "Demo\n\n- Edit everything inside the dock\n- Auto-sync pushes changes every second",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": null,
+      "notes": "",
+      "durationMs": 0
+    }
+  ],
+  "activeSlideIndex": 0,
+  "playlist": {
+    "mode": "manual",
+    "loop": true,
+    "autoAdvanceMs": 0
+  }
+}
