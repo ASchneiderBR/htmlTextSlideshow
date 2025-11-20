@@ -16,6 +16,7 @@ let stateMode = (params.get("mode") || (supportsChannel ? "channel" : "json")).t
 
 let lastUpdatedAt = "";
 let currentIndex = -1;
+let lastTransitionType = null;
 const loadedFonts = new Set();
 
 // Function to load fonts dynamically only when needed
@@ -121,15 +122,23 @@ function handleState(data) {
   if (data.updatedAt === lastUpdatedAt && index === currentIndex) {
     return;
   }
+
+  const settings = data.settings || {};
+  const currentTransitionType = settings.transitionType || "crossfade";
+
+  // Animate only if slide changed or transition type changed (to preview it)
+  // Also animate on first load (currentIndex === -1)
+  const shouldAnimate = index !== currentIndex || (lastTransitionType !== null && currentTransitionType !== lastTransitionType);
+
   lastUpdatedAt = data.updatedAt;
   currentIndex = index;
+  lastTransitionType = currentTransitionType;
 
   const slide = slides[index];
-  const settings = data.settings || {};
 
   setState("ready");
   applyTypography(slide, settings);
-  swapContent(slide, settings);
+  swapContent(slide, settings, shouldAnimate);
   updateProgress(slide.durationMs || data.playlist?.autoAdvanceMs || 0);
 
   if (debugEl && (showDebug || showMeta)) {
@@ -161,10 +170,11 @@ function applyTypography(slide, settings) {
   }
 }
 
-function swapContent(slide, settings) {
+function swapContent(slide, settings, shouldAnimate = true) {
   if (!bodyEl) return;
   const markdown = slide.raw ?? slide.body ?? "";
-  const transitionType = settings?.transitionType || "crossfade";
+  // If not animating, force 'none'
+  const transitionType = shouldAnimate ? (settings?.transitionType || "crossfade") : "none";
   const duration = settings?.transitionDuration || 200;
   
   // Update CSS variable for duration
