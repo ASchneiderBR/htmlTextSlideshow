@@ -2,6 +2,8 @@
 
 Toolkit for controlling on-stream text slides inside OBS using nothing but HTML browser sources and a lightweight Lua script. The workflow mirrors the excellent [Animated-Lower-Thirds](https://github.com/noeal-dac/Animated-Lower-Thirds) project while being purpose-built for text blocks instead of lower thirds.
 
+![Dock Preview](docs/assets/dock-preview.png)
+
 ## Components
 
 - `apps/dock-ui/` – GitHub-themed dock with markdown-aware editor and JSON publisher.
