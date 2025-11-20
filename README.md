@@ -4,7 +4,7 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 
 ## Components
 
-- `apps/dock-ui/` – GitHub-themed dock with markdown-aware editor, preset manager, and JSON publisher.
+- `apps/dock-ui/` – GitHub-themed dock with markdown-aware editor and JSON publisher.
 - `apps/browser-overlay/` – Transparent browser source that renders the active slide responsively within whatever viewport size OBS provides.
 - `lua/obs-text-slides.lua` – Hotkey-friendly script that reads the shared JSON file, updates the active slide, and exposes shortcuts inside OBS.
 - `data/slides.state.json` – File-system bridge between every component. Dock writes, overlay reads, Lua updates metadata.
@@ -21,7 +21,7 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
 
 ## Everyday workflow
 
-- **Edit slides:** Paste or type text in the Text input field, use `---` on a blank line to split slides, tweak font/size/alignment, and preview the Markdown live.
+- **Edit slides:** Paste or type text in the Text input field, use `---` on a blank line to split slides, then click **"Add slides"** to publish them.
   - **Markdown support:** The text input supports full Markdown syntax including:
     - **Bold** (`**text**` or `__text__`), *Italic* (`*text*` or `_text_`), ~~Strikethrough~~ (`~~text~~`)
     - Headings (`# H1`, `## H2`, etc.)
@@ -30,8 +30,7 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
     - Code inline (`` `code` ``) and blocks (` ```code``` `)
     - Blockquotes (`> quote`)
     - Line breaks are preserved automatically
-- **Local presets:** Press “Save preset” to store the textarea + settings inside localStorage (each portable OBS build keeps its own presets, just like the lower-thirds repo).
-- **Auto-sync:** The dock saves locally ~1 s after edits and broadcasts the same payload over `BroadcastChannel`. Nothing else to click.
+- **Auto-sync:** The dock saves locally and broadcasts the payload over `BroadcastChannel` immediately when you add slides, change settings, or navigate. Nothing else to click.
 - **Overlay:** The browser source listens to that channel by default (add `?mode=json` only if you need legacy polling for tests).
 - **Lua hotkeys:** Bind "Next", "Previous", and "First" in OBS. The script overwrites `data/hotkeys.js`, the dock polls it (just like the original lower thirds), and applies the commands.
 - **Loop control:** Enable/disable the "Loop" checkbox in the slides preview section to automatically restart at the first slide when reaching the end (default: enabled).
@@ -64,7 +63,7 @@ This repo currently contains scaffolding, specs, and placeholders so we can iter
 
 | Phase | Summary |
 | --- | --- |
-| 1 | ✅ Dock editor with Markdown, presets, auto-sync. |
+| 1 | ✅ Dock editor with Markdown, auto-sync. |
 | 2 | ✅ Overlay rendering via BroadcastChannel + JSON fallback. |
 | 3 | ✅ Lua script syncing `activeSlideIndex`. |
 | 4 | 🎯 Next: richer transitions, shared preset export, validation. |

@@ -23,11 +23,6 @@ Footer: reminder that auto-sync is always on
 
 ### Key Panels
 
-- **Presets Sidebar**
-  - Lists entries from `localStorage`.
-  - Actions: load, delete, save current textarea.
-  - Selecting a preset updates the editor and schedules an auto-sync cycle.
-
 - **Settings Drawer**
   - Font family select (system stack + optional `common/fonts` entries).
   - Font size field (18–120 px).
@@ -46,10 +41,9 @@ Footer: reminder that auto-sync is always on
 
 ## Interactions
 
-- Auto-parse on debounce (300 ms) as the user types.
-- `Ctrl+Enter` forces an immediate sync (optional for power users).
-- `Ctrl+Shift+S` creates a preset snapshot.
-- Settings edits update the preview instantly and schedule a new auto-sync run.
+- **Adding Slides**: Typing in the editor does not live-sync content. Users must click "Add Slides" to parse markdown and push to the live deck.
+- **Settings Updates**: Changing font/transitions updates the live deck immediately (debounced for inputs).
+- Navigation/Reordering updates the preview instantly and schedules an auto-sync run.
 
 ## Theming
 
