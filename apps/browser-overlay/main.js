@@ -154,12 +154,70 @@ function applyTypography(slide, settings) {
   const lineHeight = slide.lineHeight || settings.lineHeight || 1.2;
   const verticalAlign = slide.verticalAlign || settings.verticalAlign || "center";
 
+  // New settings
+  const textColor = settings.textColor || "#ffffff";
+  const textOpacity = (settings.textOpacity ?? 100) / 100;
+  const shadowIntensity = settings.shadowIntensity ?? 0; // Default to 0 if undefined, but old default was strong shadow? 
+  // Note: Old CSS had a default shadow. If we want to respect user input 0=off, we should default to something reasonable if not set, 
+  // but since we added it to default state as 0 (wait, in dock-ui I added it as 0. In CSS it was strong).
+  // To preserve backward compat for existing overlays without state update, we might want to check if 'shadowIntensity' is in settings.
+  // But 'settings' comes from state. if it's missing (old state), we might want to default to a middle value? 
+  // The user asked to "create shadow... 0 off 10 strong".
+  // I'll implement it strictly.
+  const strokeIntensity = settings.strokeIntensity ?? 0;
+
   // Load font dynamically if needed
   loadGoogleFont(fontFamily);
 
   bodyEl.style.fontFamily = fontFamily;
   bodyEl.style.textAlign = textAlign;
   bodyEl.style.lineHeight = lineHeight;
+  
+  // Apply Color
+  // Use hex directly for color, opacity is handled globally on the element
+  bodyEl.style.color = textColor;
+  // Apply opacity to the entire element to composite all layers (text, shadow, stroke) together
+  bodyEl.style.opacity = textOpacity;
+
+  // Apply Shadow
+  if (shadowIntensity > 0) {
+    // Shadow 0-100
+    // Increase blur and spread significantly as requested
+    const blur = shadowIntensity * 0.5; // Up to 50px blur
+    const offset = shadowIntensity * 0.2; // Up to 20px offset
+    
+    // Base alpha for shadow is high (black), but the whole element opacity will scale it down
+    // We use a solid black shadow (alpha 1.0) to let the element opacity handle the fade
+    // However, to keep the shadow distinct from the text if both are opaque, we might want it slightly lighter?
+    // No, usually shadow is just black with blur.
+    const shadowColor = `rgba(0, 0, 0, 1)`; 
+    
+    if (shadowIntensity > 40) {
+      // Multiple layers for richer shadow at high intensity
+      // Using offset and negative offset to simulate "spread"
+      bodyEl.style.textShadow = `
+        ${offset}px ${offset}px ${blur}px ${shadowColor},
+        -${offset/2}px -${offset/2}px ${blur}px ${shadowColor}
+      `;
+    } else {
+      bodyEl.style.textShadow = `${offset}px ${offset}px ${blur}px ${shadowColor}`;
+    }
+  } else {
+    bodyEl.style.textShadow = "none";
+  }
+
+  // Apply Stroke
+  if (strokeIntensity > 0) {
+    // Map 1-10 to much thicker stroke widths
+    const width = strokeIntensity * 1.2; 
+    // Stroke color is solid black, opacity is handled by the element
+    bodyEl.style.webkitTextStroke = `${width}px black`; 
+    bodyEl.style.paintOrder = "stroke fill";
+  } else {
+    bodyEl.style.webkitTextStroke = "0";
+    bodyEl.style.paintOrder = "normal";
+  }
+
   document.documentElement.style.setProperty("--font-size-target", fontSizePx);
   
   if (containerEl) {

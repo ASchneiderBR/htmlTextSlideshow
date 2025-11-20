@@ -12,6 +12,15 @@ const fontSelect = document.querySelector("#fontFamily");
 const fontSizeInput = document.querySelector("#fontSize");
 const textAlignSelect = document.querySelector("#textAlign");
 const verticalAlignSelect = document.querySelector("#verticalAlign");
+const colorTriggerBtn = document.querySelector("#colorTriggerBtn");
+const colorPickerPopover = document.querySelector("#colorPickerPopover");
+const colorPickerBackdrop = document.querySelector("#colorPickerBackdrop");
+const textColorInput = document.querySelector("#textColor");
+const textColorHexInput = document.querySelector("#textColorHex");
+const textOpacityInput = document.querySelector("#textOpacity");
+const textOpacityValue = document.querySelector("#textOpacityValue");
+const shadowIntensityInput = document.querySelector("#shadowIntensity");
+const strokeIntensityInput = document.querySelector("#strokeIntensity");
 const transitionTypeSelect = document.querySelector("#transitionType");
 const transitionDurationInput = document.querySelector("#transitionDuration");
 const loopBtn = document.querySelector("[data-action='toggle-loop']");
@@ -84,6 +93,10 @@ const DEFAULT_STATE = {
     lineHeight: 1.25,
     textAlign: "center",
     verticalAlign: "center",
+    textColor: "#ffffff",
+    textOpacity: 100,
+    shadowIntensity: 0,
+    strokeIntensity: 0,
     markdown: true,
     transitionType: "crossfade",
     transitionDuration: 200,
@@ -170,6 +183,15 @@ function applyStateToUi() {
   if (fontSizeInput) fontSizeInput.value = String(state.settings.defaultFontSizePx);
   if (textAlignSelect) textAlignSelect.value = state.settings.textAlign;
   if (verticalAlignSelect) verticalAlignSelect.value = state.settings.verticalAlign;
+  if (textColorInput) textColorInput.value = state.settings.textColor || "#ffffff";
+  if (textColorHexInput) textColorHexInput.value = state.settings.textColor || "#ffffff";
+  if (textOpacityInput) {
+    textOpacityInput.value = String(state.settings.textOpacity ?? 100);
+    if (textOpacityValue) textOpacityValue.textContent = `${textOpacityInput.value}%`;
+  }
+  updateColorSwatch();
+  if (shadowIntensityInput) shadowIntensityInput.value = String(state.settings.shadowIntensity ?? 0);
+  if (strokeIntensityInput) strokeIntensityInput.value = String(state.settings.strokeIntensity ?? 0);
   if (transitionTypeSelect) transitionTypeSelect.value = state.settings.transitionType || "crossfade";
   if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
   updateLoopButton();
@@ -413,9 +435,48 @@ function updateSettings(reason = "settings") {
   state.settings.defaultFontSizePx = Number(fontSizeInput?.value) || state.settings.defaultFontSizePx;
   state.settings.textAlign = textAlignSelect?.value || state.settings.textAlign;
   state.settings.verticalAlign = verticalAlignSelect?.value || state.settings.verticalAlign;
+  state.settings.textColor = textColorInput?.value || state.settings.textColor;
+  state.settings.textOpacity = Number(textOpacityInput?.value) ?? state.settings.textOpacity;
+
+  // Update auxiliary inputs
+  if (textColorHexInput && textColorInput) textColorHexInput.value = textColorInput.value;
+  if (textOpacityValue && textOpacityInput) textOpacityValue.textContent = `${textOpacityInput.value}%`;
+  updateColorSwatch();
+
+  state.settings.shadowIntensity = Number(shadowIntensityInput?.value) ?? state.settings.shadowIntensity;
+  state.settings.strokeIntensity = Number(strokeIntensityInput?.value) ?? state.settings.strokeIntensity;
   state.settings.transitionType = transitionTypeSelect?.value || state.settings.transitionType;
   state.settings.transitionDuration = Number(transitionDurationInput?.value) || state.settings.transitionDuration;
   persistState(reason);
+}
+
+function updateColorSwatch() {
+  const swatch = document.querySelector(".color-trigger-swatch");
+  if (!swatch) return;
+  const color = textColorInput?.value || "#ffffff";
+  const opacity = (Number(textOpacityInput?.value) ?? 100) / 100;
+  swatch.style.setProperty("--swatch-color", color);
+  swatch.style.setProperty("--swatch-opacity", opacity);
+}
+
+function showColorPicker() {
+  if (!colorPickerPopover || !colorTriggerBtn) return;
+  
+  const settings = document.querySelector(".panel--settings");
+  const btnRect = colorTriggerBtn.getBoundingClientRect();
+  const settingsRect = settings.getBoundingClientRect();
+  
+  // Position relative to settings container
+  const top = btnRect.top - settingsRect.top + btnRect.height + 4;
+  
+  colorPickerPopover.style.top = `${top}px`;
+  colorPickerPopover.hidden = false;
+  if (colorPickerBackdrop) colorPickerBackdrop.hidden = false;
+}
+
+function hideColorPicker() {
+  if (colorPickerPopover) colorPickerPopover.hidden = true;
+  if (colorPickerBackdrop) colorPickerBackdrop.hidden = true;
 }
 
 function toggleLoop() {
@@ -534,6 +595,46 @@ function init() {
   fontSizeInput?.addEventListener("input", () => debouncedUpdateSettings("font size"));
   textAlignSelect?.addEventListener("change", () => updateSettings("horizontal alignment"));
   verticalAlignSelect?.addEventListener("change", () => updateSettings("vertical alignment"));
+  
+  // Color picker trigger
+  colorTriggerBtn?.addEventListener("click", showColorPicker);
+  
+  // Color picker inputs
+  textColorInput?.addEventListener("input", () => {
+    if (textColorHexInput) textColorHexInput.value = textColorInput.value;
+    updateColorSwatch();
+    debouncedUpdateSettings("text color");
+  });
+  
+  textColorHexInput?.addEventListener("change", () => {
+    const val = textColorHexInput.value;
+    if (/^#[0-9A-F]{6}$/i.test(val)) {
+      if (textColorInput) textColorInput.value = val;
+      updateColorSwatch();
+      updateSettings("text color hex");
+    }
+  });
+
+  textOpacityInput?.addEventListener("input", () => {
+    if (textOpacityValue) textOpacityValue.textContent = `${textOpacityInput.value}%`;
+    updateColorSwatch();
+    debouncedUpdateSettings("text opacity");
+  });
+  
+  // Close color picker on outside click
+  document.addEventListener("click", (e) => {
+    if (colorPickerPopover && !colorPickerPopover.hidden) {
+      if (!colorPickerPopover.contains(e.target) && !colorTriggerBtn.contains(e.target)) {
+        hideColorPicker();
+      }
+    }
+  });
+  
+  // Close on backdrop click
+  colorPickerBackdrop?.addEventListener("click", hideColorPicker);
+
+  shadowIntensityInput?.addEventListener("input", () => debouncedUpdateSettings("shadow intensity"));
+  strokeIntensityInput?.addEventListener("input", () => debouncedUpdateSettings("stroke intensity"));
   transitionTypeSelect?.addEventListener("change", () => updateSettings("transition type"));
   transitionDurationInput?.addEventListener("input", () => debouncedUpdateSettings("transition duration"));
 

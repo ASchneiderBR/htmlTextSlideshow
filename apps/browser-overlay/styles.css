@@ -53,14 +53,12 @@ body {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  font-size: clamp(
-    var(--font-size-min),
-    min(calc(var(--font-size-target) * 1px), 8vw),
-    var(--font-size-max)
-  );
+  font-size: calc(var(--font-size-target) * 1px);
   line-height: 1.2;
   text-shadow: var(--shadow);
   opacity: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   /* Remove default transition to save resources */
   /* will-change applied only during animations */
 }

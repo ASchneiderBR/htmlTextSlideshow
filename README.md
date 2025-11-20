@@ -30,6 +30,18 @@ Toolkit for controlling on-stream text slides inside OBS using nothing but HTML 
     - Code inline (`` `code` ``) and blocks (` ```code``` `)
     - Blockquotes (`> quote`)
     - Line breaks are preserved automatically
+- **Typography controls:** Customize your text appearance with:
+  - **Font selection:** Choose from Google Fonts (Montserrat, Roboto, Open Sans, etc.) or system fonts
+  - **Text color & opacity:** Click the color button to open a picker with hex input and opacity slider (0-100%)
+  - **Font size:** Adjustable from 18px to 120px (no viewport limits, supports full-width rendering)
+  - **Alignment:** Horizontal (left/center/right) and vertical (top/middle/bottom)
+  - **Text shadow:** Adjustable intensity (0-100) - higher values create stronger, more spread-out shadows
+  - **Text stroke:** Adjustable outline thickness (0-10) with paint-order ensuring stroke renders behind text
+- **Slide transitions:** Choose from multiple transition types:
+  - Crossfade, Fade (sequential), Slide (left/right/up/down)
+  - Zoom (in/out), Push (left/right/up/down), or None (instant)
+  - Adjustable duration (0-2000ms)
+  - Transitions only play when navigating slides or previewing effects (not when changing formatting)
 - **Auto-sync:** The dock saves locally and broadcasts the payload over `BroadcastChannel` immediately when you add slides, change settings, or navigate. Nothing else to click.
 - **Overlay:** The browser source listens to that channel by default (add `?mode=json` only if you need legacy polling for tests).
 - **Lua hotkeys:** Bind "Next", "Previous", and "First" in OBS. The script overwrites `data/hotkeys.js`, the dock polls it (just like the original lower thirds), and applies the commands.
@@ -51,13 +63,16 @@ I am an **OBS Power User** with extensive broadcasting experience, but I am **no
 
 ## Status
 
-This repo currently contains scaffolding, specs, and placeholders so we can iterate deliberately:
+This repo currently contains a fully functional text slideshow system:
 
 - Layout + docs describing every moving part.
 - LocalStorage schema, delimiter rules, and UI/UX expectations.
 - Dock UI with live markdown preview, local presets, auto-sync, and BroadcastChannel support.
-- Overlay with responsive typography, transition hooks, progress bar, and channel/json modes.
+- Advanced typography controls: font selection, color picker with opacity, shadow, stroke, and alignment options.
+- Overlay with responsive typography (unlimited font size), transition system, progress bar, and channel/json modes.
+- Smart transition system that only animates on slide changes (instant updates for formatting changes).
 - Lua hotkey script that mirrors Animated Lower Thirds (writes `data/hotkeys.js` for the dock to consume).
+- Comprehensive text effects with unified opacity control (shadow, stroke, and text as a single composited layer).
 
 ## Roadmap
 
@@ -66,7 +81,9 @@ This repo currently contains scaffolding, specs, and placeholders so we can iter
 | 1 | ✅ Dock editor with Markdown, auto-sync. |
 | 2 | ✅ Overlay rendering via BroadcastChannel + JSON fallback. |
 | 3 | ✅ Lua script syncing `activeSlideIndex`. |
-| 4 | 🎯 Next: richer transitions, shared preset export, validation. |
+| 4 | ✅ Advanced typography: color picker, shadow, stroke, alignment. |
+| 5 | ✅ Smart transitions (only on slide changes, not formatting). |
+| 6 | 🎯 Next: preset export/import, per-slide overrides, animation library expansion.
 
 ## Contributing
 
