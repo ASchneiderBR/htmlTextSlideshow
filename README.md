@@ -116,7 +116,14 @@ Version 2.0 simplifies everything into just **3 files**:
 
 ## 📝 License
 
-MIT License – Free to use, modify, and distribute.
+This project is licensed under the **GNU General Public License v2.0 or later** (GPL v2.0+), which is compatible with OBS Studio's license requirements.
+
+This means:
+- ✅ Free to use, modify, and distribute
+- ✅ Source code must remain open and available
+- ✅ Derivative works must also be licensed under GPL v2.0+
+
+For the full license text, see the [LICENSE](LICENSE) file in this repository.
 
 ## 🙏 Credits
 
