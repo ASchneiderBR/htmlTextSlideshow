@@ -7,8 +7,8 @@
 ## 🚀 Quick Start (Super Easy Install)
 
 1. **Download** this repository (or the release zip).
-2. **Extract** the folder anywhere on your computer (e.g., `Documents\OBS-Text-Slideshow`).
-3. In OBS, go to **Tools → Scripts**, click the `+` button, and load **`obs-text-slides.lua`**.
+2. **Extract** the folder anywhere on your computer (e.g., `Documents\HTML-Text-Slideshow`).
+3. In OBS, go to **Tools → Scripts**, click the `+` button, and load **`text-slides.lua`**.
 4. In the **Script Properties** panel, you'll see two file paths:
    - **Dock Path** – Copy this path.
    - **Source Path** – Copy this path.
@@ -25,7 +25,7 @@
 
 Version 2.0 simplifies everything into just **3 files**:
 
-- **`obs-text-slides.lua`** – The installer script. Manages hotkeys and displays file paths.
+- **`text-slides.lua`** – The installer script. Manages hotkeys and displays file paths.
 - **`Dock.html`** – The control panel (standalone, all CSS/JS bundled inside).
 - **`Source.html`** – The overlay display (standalone, all CSS/JS bundled inside).
 - **`hotkeys.js`** – (Auto-generated) Bridges Lua hotkey commands to the Dock.
@@ -87,7 +87,7 @@ Version 2.0 simplifies everything into just **3 files**:
 - **Lua bridge**: Hotkey commands written to `hotkeys.js`, polled by the Dock every second.
 
 ### What's New in v2.0
-- **Simplified structure**: From 15+ files to just 3 core files (Dock.html, Source.html, obs-text-slides.lua).
+- **Simplified structure**: From 15+ files to just 3 core files (Dock.html, Source.html, text-slides.lua).
 - **No build process**: Everything works directly from source—open the HTML in any browser.
 - **Better installation**: Script properties display exact file paths with `file:///` prefix for easy copy/paste.
 - **Enhanced typography**: Shadow and stroke effects, unified opacity control, better font rendering.

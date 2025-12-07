@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OBS Text Slides Dock</title>
+    <title>HTML Text Slideshow Dock</title>
     <style>
 :root {
   color-scheme: dark;
@@ -1217,7 +1217,7 @@ var statusPill = document.querySelector("[data-status-pill]");
 
 var draggedSlideIndex = null;
 
-var STATE_STORAGE_KEY = "obsTextSlides.state";
+var STATE_STORAGE_KEY = "htmlTextSlideshow.state";
 var DELIMITER = "\n\n---\n\n";
 
 var clone = function(value) { return JSON.parse(JSON.stringify(value)); };
@@ -1313,7 +1313,7 @@ var DEFAULT_STATE = {
 var state = loadStateFromStorage();
 var luaSeq = 0;
 
-var channel = new BroadcastChannel("obs-text-slides");
+var channel = new BroadcastChannel("text-slides");
 channel.addEventListener("message", function(event) {
   var payload = event && event.data;
   if (!payload || typeof payload !== "object") return;
@@ -1722,7 +1722,7 @@ function pollLuaCommands() {
   pendingScript = document.createElement("script");
   pendingScript.src = "./hotkeys.js?t=" + Date.now();
   pendingScript.onload = function() {
-    var payload = window.__obsTextSlidesHotkey;
+    var payload = window.__textSlidesHotkey;
     if (payload && typeof payload.seq === "number" && payload.seq > luaSeq) {
       luaSeq = payload.seq;
       if (payload.command === "next") {

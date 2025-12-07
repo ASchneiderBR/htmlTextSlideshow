@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OBS Text Slides Overlay</title>
+    <title>HTML Text Slideshow Overlay</title>
     <style>
 :root {
   color-scheme: dark;
@@ -568,7 +568,7 @@ if (debugEl && (showDebug || showMeta)) {
 
 var channel = null;
 if (supportsChannel) {
-  channel = new BroadcastChannel("obs-text-slides");
+  channel = new BroadcastChannel("text-slides");
   channel.addEventListener("message", function(event) {
     var payload = event && event.data;
     if (!payload || typeof payload !== "object") return;

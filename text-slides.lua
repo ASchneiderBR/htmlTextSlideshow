@@ -24,7 +24,7 @@ local function write_command(command)
     return
   end
   local payload = string.format(
-    "window.__obsTextSlidesHotkey={seq:%d,command:%s,updatedAt:'%s'};",
+    "window.__textSlidesHotkey={seq:%d,command:%s,updatedAt:'%s'};",
     command_seq,
     command,
     os.date("!%Y-%m-%dT%H:%M:%S.000Z")
@@ -89,7 +89,7 @@ function script_update(settings)
   
   obs.obs_data_set_string(settings, "dock_url", dock_path)
   obs.obs_data_set_string(settings, "source_path", source_path)
-  obs.obs_data_set_string(settings, "github_url", "https://github.com/antoniosubasic/obs-htmlTextSlideshow")
+  obs.obs_data_set_string(settings, "github_url", "https://github.com/ASchneiderBR/htmlTextSlideshow")
 end
 
 function script_load(settings_data)
