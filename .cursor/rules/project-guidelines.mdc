@@ -112,14 +112,26 @@ alwaysApply: true
 
 3. **Push to main**: Ensure all changes are pushed to `origin/main`
 
-4. **Create release via GitHub CLI**:
+4. **Authenticate GitHub CLI** (if not already authenticated):
+   ```bash
+   gh auth login
+   ```
+   Follow the interactive prompts to authenticate.
+
+5. **Create release via GitHub CLI** (preferred method - uses workflow to create ZIP):
    ```bash
    gh workflow run release.yml -f version=X.Y.Z
    ```
-   Or if GitHub CLI workflow dispatch is not available, use:
+   This triggers the GitHub Actions workflow which will:
+   - Create the release package ZIP automatically
+   - Extract notes from CHANGELOG.md
+   - Create Git tag and GitHub Release
+
+   **Alternative method** (if workflow dispatch fails):
    ```bash
-   gh release create vX.Y.Z --title "Release X.Y.Z" --notes-file <(extract from CHANGELOG)
+   gh release create vX.Y.Z --title "Release X.Y.Z" --notes-file release-notes-X.Y.Z.txt
    ```
+   Note: This method requires manual ZIP creation, so prefer the workflow method.
 
 5. **Monitor workflow**: The workflow will:
    - Validate version format
