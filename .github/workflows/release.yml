@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 2.1.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional, will use CHANGELOG if empty)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format X.Y.Z (e.g., 2.1.0)"
+            exit 1
+          fi
+          echo "Version validated: ${{ inputs.version }}"
+      
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ inputs.version }} already exists!"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag ${{ inputs.version }} is available"
+          fi
+      
+      - name: Create release package
+        run: |
+          mkdir -p release-package
+          cp Dock.html release-package/
+          cp Source.html release-package/
+          cp text-slides.lua release-package/
+          cp README.md release-package/
+          cp LICENSE release-package/
+          # Create ZIP file
+          zip -r obs-text-slideshow-${{ inputs.version }}.zip release-package/
+          # List contents for verification
+          echo "📦 Release package contents:"
+          ls -lh release-package/
+          echo "✅ Created ZIP: obs-text-slideshow-${{ inputs.version }}.zip"
+          ls -lh obs-text-slideshow-${{ inputs.version }}.zip
+      
+      - name: Extract release notes from CHANGELOG
+        id: changelog
+        if: inputs.release_notes == ''
+        run: |
+          # Extract the latest version entry from CHANGELOG.md
+          VERSION="${{ inputs.version }}"
+          # Try to find the section for this version
+          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            # Extract content between this version and the next version or end of file
+            awk "/^## \[$VERSION\]/,/^## \[/{if (!/^## \[$VERSION\]/ && !/^## \[/) print}" CHANGELOG.md > /tmp/release_notes.txt || true
+            # If empty, try to get everything after the version header until next version
+            if [ ! -s /tmp/release_notes.txt ]; then
+              awk "/^## \[$VERSION\]/,/^## \[/{if (!/^## \[$VERSION\]/) print}" CHANGELOG.md | head -n -1 > /tmp/release_notes.txt || true
+            fi
+            # If still empty, get everything after the version header
+            if [ ! -s /tmp/release_notes.txt ]; then
+              awk "/^## \[$VERSION\]/,0" CHANGELOG.md | tail -n +2 > /tmp/release_notes.txt || true
+            fi
+          else
+            echo "⚠️  Warning: Version $VERSION not found in CHANGELOG.md"
+            echo "Using default release notes"
+            echo "Release $VERSION" > /tmp/release_notes.txt
+          fi
+          # Escape for GitHub Actions
+          NOTES=$(cat /tmp/release_notes.txt | sed 's/$/\\n/' | tr -d '\n')
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create Git tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ inputs.version }}" -m "Release ${{ inputs.version }}"
+          git push origin "${{ inputs.version }}"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          body: |
+            ${{ inputs.release_notes != '' && inputs.release_notes || steps.changelog.outputs.notes }}
+            
+            ## 📦 Download
+            Download the ZIP file below and extract it to use the slideshow in OBS Studio.
+          files: obs-text-slideshow-${{ inputs.version }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
