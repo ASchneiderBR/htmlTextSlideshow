@@ -34,7 +34,7 @@ Este documento explica como criar releases para o projeto OBS HTML Text Slidesho
 1. **Atualize o CHANGELOG.md** (mesmo processo acima)
 
 2. **Vá para GitHub Actions**:
-   - Acesse: `https://github.com/SEU_USUARIO/obs-htmlTextSlideshow/actions`
+   - Acesse: `https://github.com/SEU_USUARIO/htmlTextSlideshow/actions`
    - Clique em "Release" no menu lateral
    - Clique em "Run workflow"
    - Preencha:
@@ -45,12 +45,12 @@ Este documento explica como criar releases para o projeto OBS HTML Text Slidesho
 3. **Aguarde a conclusão** (geralmente 1-2 minutos)
 
 4. **Verifique o release**:
-   - Acesse: `https://github.com/SEU_USUARIO/obs-htmlTextSlideshow/releases`
+   - Acesse: `https://github.com/SEU_USUARIO/htmlTextSlideshow/releases`
    - O release estará disponível com o ZIP anexado
 
 ## 📦 Conteúdo do Release
 
-O ZIP gerado contém:
+O ZIP gerado contém (arquivos soltos na raiz, sem pasta intermediária):
 - `Dock.html` - Painel de controle
 - `Source.html` - Overlay para OBS
 - `text-slides.lua` - Script Lua para OBS

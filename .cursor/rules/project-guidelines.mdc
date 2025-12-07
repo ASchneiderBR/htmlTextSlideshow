@@ -207,5 +207,6 @@ alwaysApply: true
 - The workflow does NOT automatically update version numbers in code files (like `Dock.html`).
 - Version in `Dock.html` (line ~1260) is for internal state tracking, not release version.
 - Always update CHANGELOG.md before creating a release.
-- The ZIP file is named: `obs-text-slideshow-X.Y.Z.zip`
+- The ZIP file is named: `htmlTextSlideshow-X.Y.Z.zip`
+- The ZIP contains files directly in root (no intermediate folder like `release-package/`)
 - The workflow preserves markdown formatting when extracting notes from CHANGELOG.md

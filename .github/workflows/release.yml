@@ -46,19 +46,18 @@ jobs:
       
       - name: Create release package
         run: |
-          mkdir -p release-package
-          cp Dock.html release-package/
-          cp Source.html release-package/
-          cp text-slides.lua release-package/
-          cp README.md release-package/
-          cp LICENSE release-package/
-          # Create ZIP file
-          zip -r obs-text-slideshow-${{ inputs.version }}.zip release-package/
+          # Create ZIP file with files directly in root (no intermediate folder)
+          zip htmlTextSlideshow-${{ inputs.version }}.zip \
+            Dock.html \
+            Source.html \
+            text-slides.lua \
+            README.md \
+            LICENSE
           # List contents for verification
           echo "📦 Release package contents:"
-          ls -lh release-package/
-          echo "✅ Created ZIP: obs-text-slideshow-${{ inputs.version }}.zip"
-          ls -lh obs-text-slideshow-${{ inputs.version }}.zip
+          unzip -l htmlTextSlideshow-${{ inputs.version }}.zip
+          echo "✅ Created ZIP: htmlTextSlideshow-${{ inputs.version }}.zip"
+          ls -lh htmlTextSlideshow-${{ inputs.version }}.zip
       
       - name: Extract release notes from CHANGELOG
         id: changelog
@@ -117,7 +116,7 @@ jobs:
             ## 📦 Download
             
             Download the ZIP file below and extract it to use the slideshow in OBS Studio.
-          files: obs-text-slideshow-${{ inputs.version }}.zip
+          files: htmlTextSlideshow-${{ inputs.version }}.zip
           draft: false
           prerelease: false
         env:
