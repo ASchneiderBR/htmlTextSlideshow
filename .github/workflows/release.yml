@@ -64,29 +64,38 @@ jobs:
         id: changelog
         if: inputs.release_notes == ''
         run: |
-          # Extract the latest version entry from CHANGELOG.md
+          # Extract the version entry from CHANGELOG.md
           VERSION="${{ inputs.version }}"
-          # Try to find the section for this version
+          
           if grep -q "## \[$VERSION\]" CHANGELOG.md; then
-            # Extract content between this version and the next version or end of file
-            awk "/^## \[$VERSION\]/,/^## \[/{if (!/^## \[$VERSION\]/ && !/^## \[/) print}" CHANGELOG.md > /tmp/release_notes.txt || true
-            # If empty, try to get everything after the version header until next version
+            # Extract content from this version header until the next version header or separator
+            # This awk command:
+            # 1. Starts at the version header (## [VERSION])
+            # 2. Stops at the next version header (## [) or separator (---)
+            # 3. Excludes the version header line itself
+            # 4. Stops before the separator or next version
+            awk -v version="$VERSION" '
+              BEGIN { in_section = 0; found = 0 }
+              /^## \[/ && found == 1 { exit }
+              /^## \[/ && $0 ~ "\\[" version "\\]" { in_section = 1; found = 1; next }
+              /^---$/ && in_section == 1 { exit }
+              in_section == 1 { print }
+            ' CHANGELOG.md > /tmp/release_notes.txt
+            
+            # Verify we got content
             if [ ! -s /tmp/release_notes.txt ]; then
-              awk "/^## \[$VERSION\]/,/^## \[/{if (!/^## \[$VERSION\]/) print}" CHANGELOG.md | head -n -1 > /tmp/release_notes.txt || true
-            fi
-            # If still empty, get everything after the version header
-            if [ ! -s /tmp/release_notes.txt ]; then
-              awk "/^## \[$VERSION\]/,0" CHANGELOG.md | tail -n +2 > /tmp/release_notes.txt || true
+              echo "⚠️  Warning: No content extracted for version $VERSION"
+              echo "Release $VERSION" > /tmp/release_notes.txt
             fi
           else
             echo "⚠️  Warning: Version $VERSION not found in CHANGELOG.md"
             echo "Using default release notes"
             echo "Release $VERSION" > /tmp/release_notes.txt
           fi
-          # Escape for GitHub Actions
-          NOTES=$(cat /tmp/release_notes.txt | sed 's/$/\\n/' | tr -d '\n')
+          
+          # Output notes using GitHub Actions multiline format (preserves markdown)
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
+          cat /tmp/release_notes.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       
       - name: Create Git tag
@@ -106,6 +115,7 @@ jobs:
             ${{ inputs.release_notes != '' && inputs.release_notes || steps.changelog.outputs.notes }}
             
             ## 📦 Download
+            
             Download the ZIP file below and extract it to use the slideshow in OBS Studio.
           files: obs-text-slideshow-${{ inputs.version }}.zip
           draft: false

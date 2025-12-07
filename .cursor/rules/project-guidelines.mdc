@@ -103,10 +103,23 @@ alwaysApply: true
 
 **When user asks for a release (e.g., "criar release versão 2.1" or "create release version 2.1.0"):**
 
-1. **Verify CHANGELOG.md**: Check if entry exists for the version. If not, create it with:
-   - Date in format `YYYY-MM-DD` (use current date)
+1. **Verify/Update CHANGELOG.md**: Check if entry exists for the version. If not, create it with:
+   - Date in format `YYYY-MM-DD` (use current date - check system date, not assume)
    - Sections: Added, Changed, Fixed, Removed (as applicable)
-   - Follow existing format and style
+   - **MUST end with `---` separator** (three dashes on blank line) to prevent workflow from including previous versions
+   - Follow existing format and style exactly
+   - Example structure:
+     ```markdown
+     ## [X.Y.Z] - YYYY-MM-DD
+     
+     ### Added
+     - Feature description
+     
+     ### Fixed
+     - Bug fix description
+     
+     ---
+     ```
 
 2. **Commit CHANGELOG**: Stage and commit the CHANGELOG update with message like `chore: prepare release X.Y.Z`
 
@@ -163,7 +176,7 @@ alwaysApply: true
 - **MINOR**: New features, backwards compatible (e.g., 2.0.0 → 2.1.0)
 - **PATCH**: Bug fixes, backwards compatible (e.g., 2.0.0 → 2.0.1)
 
-**CHANGELOG Format:**
+**CHANGELOG Format (CRITICAL - Must follow exactly):**
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
@@ -178,10 +191,21 @@ alwaysApply: true
 
 ### Removed
 - Removed feature description
+
+---
 ```
+
+**CRITICAL CHANGELOG Rules:**
+- **ALWAYS** end the version section with `---` separator (three dashes on a blank line)
+- **NEVER** include content from previous versions in the extracted notes
+- **ALWAYS** use proper markdown formatting (headers, lists, bold)
+- **ALWAYS** use current date in format `YYYY-MM-DD` (e.g., `2025-12-07`)
+- The workflow extracts from `## [VERSION]` until `---` or next `## [VERSION]`
+- Without the `---` separator, the workflow may include content from previous versions
 
 **Important Notes:**
 - The workflow does NOT automatically update version numbers in code files (like `Dock.html`).
 - Version in `Dock.html` (line ~1260) is for internal state tracking, not release version.
 - Always update CHANGELOG.md before creating a release.
 - The ZIP file is named: `obs-text-slideshow-X.Y.Z.zip`
+- The workflow preserves markdown formatting when extracting notes from CHANGELOG.md
