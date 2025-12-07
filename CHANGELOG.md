@@ -50,7 +50,7 @@
 - **File Structure**:
   - `apps/dock-ui/` → `Dock.html` (standalone)
   - `apps/browser-overlay/` → `Source.html` (standalone)
-  - `lua/obs-text-slides.lua` → `text-slides.lua` (root)
+  - `lua/text-slides.lua` → `text-slides.lua` (root)
   - `data/hotkeys.js` → `hotkeys.js` (root, auto-generated)
   - `data/slides.state.json` → `slides.json` (root, auto-generated)
 - **Code Style**:
