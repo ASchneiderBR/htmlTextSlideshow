@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTML Text Slideshow Dock v2.3.0</title>
+  <title>HTML Text Slideshow Dock v2.3.1</title>
   <style>
     :root {
       color-scheme: dark;
@@ -33,12 +33,20 @@
       color: var(--text);
     }
 
+    /* Base panel/card styling (keeps all sections consistent) */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      min-height: 0;
+    }
+
     .app {
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 12px;
+      overflow: hidden;
     }
 
     .app__header,
@@ -74,19 +82,66 @@
     }
 
     .app__main {
+      flex: 1;
       display: grid;
-      grid-template-columns: 240px 1fr 1fr;
+      grid-template-columns: 320px 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "settings content";
       gap: 12px;
+      padding: 12px;
+      min-height: 0;
+      overflow: hidden;
     }
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      min-height: 160px;
+    .col-settings {
+      grid-area: settings;
       display: flex;
       flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    /* Wrapper for Editor and Preview in 2-column mode */
+    .col-content-wrapper {
+      grid-area: content;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel--editor {
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+    }
+
+    /* 3-Column Layout for wider screens */
+    @media (min-width: 1200px) {
+      .app__main {
+        grid-template-columns: 320px 1fr 1fr;
+      }
+
+      .col-content-wrapper {
+        grid-column: 2 / 4;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+        column-gap: 12px;
+        row-gap: 12px;
+      }
+
+      .panel--editor {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .preview-stack {
+        grid-column: 2;
+        grid-row: 1;
+      }
     }
 
     .panel--status:not([open]) {
@@ -133,6 +188,18 @@
       font-family: var(--font-sans);
       font-size: 0.85rem;
       cursor: pointer;
+    }
+
+    /* Keep dropdown chevron spacing consistent across browsers */
+    .panel--settings select {
+      padding-right: 34px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20'%3E%3Cpath fill='%238b949e' d='M5.6 7.4a1 1 0 0 1 1.4 0L10 10.4l3-3a1 1 0 1 1 1.4 1.4l-3.7 3.7a1 1 0 0 1-1.4 0L5.6 8.8a1 1 0 0 1 0-1.4Z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 14px 14px;
     }
 
     .panel--settings input[type="number"] {
@@ -312,15 +379,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
     }
 
     .panel--status {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0;
       min-height: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .panel--status[open] {
@@ -338,7 +407,7 @@
     }
 
     .status__body {
-      padding: 0 12px 12px 12px;
+      padding: 0;
       margin-top: 12px;
       display: none;
     }
@@ -357,12 +426,16 @@
     }
 
     .status__summary .panel__header {
-      padding: 12px;
+      padding: 0;
       padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
     }
 
     .panel--status:not([open]) .status__summary .panel__header {
-      padding-bottom: 12px;
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
     }
 
     .status__summary:hover {
@@ -541,19 +614,32 @@
       font-size: 0.85rem;
     }
 
+    /* Preview + Status live as a single stack (status always at the end) */
+    .preview-stack {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+      gap: 12px;
+    }
+
     .panel--preview {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
-      max-height: 600px;
     }
 
     .panel__header--sticky {
-      position: sticky;
-      top: 0;
-      background: var(--panel);
-      z-index: 10;
-      margin: -12px -12px 0 -12px;
-      padding: 12px;
-      margin-bottom: 12px;
+      /* Keep class for compatibility, but don't break panel header alignment */
+      position: static;
+      top: auto;
+      background: transparent;
+      z-index: auto;
+      margin: 0;
+      padding: 0;
+      margin-bottom: 0;
     }
 
     .preview__slides {
@@ -561,10 +647,18 @@
       overflow-y: auto;
       overflow-x: hidden;
       padding: 0 0 12px 0;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 10px;
       min-height: 200px;
+      align-content: start;
+    }
+
+    /* Responsive preview cards (keeps them readable; 2 columns only on wide screens) */
+    @media (min-width: 1600px) {
+      .preview__slides {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .preview__slides::-webkit-scrollbar {
@@ -601,12 +695,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      grid-column: 1 / -1;
     }
 
     .preview__actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .preview__slide {
@@ -825,8 +921,28 @@
     }
 
     @media (max-width: 960px) {
+      .app {
+        height: auto;
+        overflow: auto;
+      }
+
       .app__main {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+      }
+
+      .col-settings {
+        border-right: none;
+        overflow: visible;
+      }
+
+      .col-content-wrapper {
+        overflow: visible;
+      }
+
+      .panel--preview {
+        max-height: 600px;
       }
     }
 
@@ -918,214 +1034,231 @@
 <body>
   <div class="app" data-state="boot">
     <main class="app__main">
-      <section class="panel panel--sidebar">
-        <h2>Typography</h2>
-        <div class="panel--settings">
-          <label class="label-with-inline-trigger">
-            <span class="label-text">Font</span>
-            <div class="input-with-trigger">
-              <select id="fontFamily">
-                <optgroup label="Google Fonts - Sans Serif">
-                  <option value="'Montserrat', sans-serif">Montserrat</option>
-                  <option value="'Roboto', sans-serif">Roboto</option>
-                  <option value="'Open Sans', sans-serif">Open Sans</option>
-                  <option value="'Lato', sans-serif">Lato</option>
-                  <option value="'Poppins', sans-serif">Poppins</option>
-                  <option value="'Raleway', sans-serif">Raleway</option>
-                  <option value="'Ubuntu', sans-serif">Ubuntu</option>
-                  <option value="'Nunito', sans-serif">Nunito</option>
-                  <option value="'PT Sans', sans-serif">PT Sans</option>
-                  <option value="'Oswald', sans-serif">Oswald</option>
-                </optgroup>
-                <optgroup label="Google Fonts - Serif">
-                  <option value="'Playfair Display', serif">Playfair Display</option>
-                  <option value="'Merriweather', serif">Merriweather</option>
-                </optgroup>
-                <optgroup label="System Fonts - Sans Serif">
-                  <option value="Inter, 'Segoe UI', sans-serif">Inter / System</option>
-                  <option value="Arial, Helvetica, sans-serif">Arial</option>
-                  <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
-                  <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
-                  <option value="Verdana, Geneva, Tahoma, sans-serif">Verdana</option>
-                  <option value="Tahoma, Verdana, Segoe, sans-serif">Tahoma</option>
-                  <option value="'Trebuchet MS', 'Lucida Sans', Arial, sans-serif">Trebuchet MS</option>
-                  <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
-                </optgroup>
-                <optgroup label="System Fonts - Serif">
-                  <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
-                  <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                  <option value="Garamond, Baskerville, 'Times New Roman', serif">Garamond</option>
-                  <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
-                </optgroup>
-                <optgroup label="Monospace">
-                  <option value="'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace">JetBrains Mono
-                  </option>
-                  <option value="'Courier New', Courier, monospace">Courier New</option>
-                  <option value="Consolas, 'Courier New', monospace">Consolas</option>
-                  <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
-                </optgroup>
-                <optgroup label="Display / Fun">
-                  <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans MS</option>
-                </optgroup>
+
+      <!-- Left Column: Settings & Status -->
+      <div class="col-settings">
+
+        <section class="panel panel--sidebar">
+          <h2>Typography</h2>
+          <div class="panel--settings">
+            <label class="label-with-inline-trigger">
+              <span class="label-text">Font</span>
+              <div class="input-with-trigger">
+                <select id="fontFamily">
+                  <optgroup label="Google Fonts - Sans Serif">
+                    <option value="'Montserrat', sans-serif">Montserrat</option>
+                    <option value="'Roboto', sans-serif">Roboto</option>
+                    <option value="'Open Sans', sans-serif">Open Sans</option>
+                    <option value="'Lato', sans-serif">Lato</option>
+                    <option value="'Poppins', sans-serif">Poppins</option>
+                    <option value="'Raleway', sans-serif">Raleway</option>
+                    <option value="'Ubuntu', sans-serif">Ubuntu</option>
+                    <option value="'Nunito', sans-serif">Nunito</option>
+                    <option value="'PT Sans', sans-serif">PT Sans</option>
+                    <option value="'Oswald', sans-serif">Oswald</option>
+                  </optgroup>
+                  <optgroup label="Google Fonts - Serif">
+                    <option value="'Playfair Display', serif">Playfair Display</option>
+                    <option value="'Merriweather', serif">Merriweather</option>
+                  </optgroup>
+                  <optgroup label="System Fonts - Sans Serif">
+                    <option value="Inter, 'Segoe UI', sans-serif">Inter / System</option>
+                    <option value="Arial, Helvetica, sans-serif">Arial</option>
+                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Helvetica</option>
+                    <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
+                    <option value="Verdana, Geneva, Tahoma, sans-serif">Verdana</option>
+                    <option value="Tahoma, Verdana, Segoe, sans-serif">Tahoma</option>
+                    <option value="'Trebuchet MS', 'Lucida Sans', Arial, sans-serif">Trebuchet MS</option>
+                    <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact</option>
+                  </optgroup>
+                  <optgroup label="System Fonts - Serif">
+                    <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
+                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                    <option value="Garamond, Baskerville, 'Times New Roman', serif">Garamond</option>
+                    <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+                  </optgroup>
+                  <optgroup label="Monospace">
+                    <option value="'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace">JetBrains Mono
+                    </option>
+                    <option value="'Courier New', Courier, monospace">Courier New</option>
+                    <option value="Consolas, 'Courier New', monospace">Consolas</option>
+                    <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
+                  </optgroup>
+                  <optgroup label="Display / Fun">
+                    <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans MS</option>
+                  </optgroup>
+                </select>
+                <button type="button" class="color-trigger-btn-inline" id="colorTriggerBtn" title="Click to edit color">
+                  <span class="color-trigger-swatch"></span>
+                </button>
+              </div>
+            </label>
+            <label>
+              Font size (px)
+              <input id="fontSize" type="number" min="18" max="120" value="42" />
+            </label>
+            <label>
+              Horizontal alignment
+              <select id="textAlign">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
               </select>
-              <button type="button" class="color-trigger-btn-inline" id="colorTriggerBtn" title="Click to edit color">
-                <span class="color-trigger-swatch"></span>
-              </button>
-            </div>
-          </label>
-          <label>
-            Font size (px)
-            <input id="fontSize" type="number" min="18" max="120" value="42" />
-          </label>
-          <label>
-            Horizontal alignment
-            <select id="textAlign">
-              <option value="left">Left</option>
-              <option value="center" selected>Center</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
-          <label>
-            Vertical alignment
-            <select id="verticalAlign">
-              <option value="flex-start">Top</option>
-              <option value="center" selected>Middle</option>
-              <option value="flex-end">Bottom</option>
-            </select>
-          </label>
+            </label>
+            <label>
+              Vertical alignment
+              <select id="verticalAlign">
+                <option value="flex-start">Top</option>
+                <option value="center" selected>Middle</option>
+                <option value="flex-end">Bottom</option>
+              </select>
+            </label>
 
-          <label>
-            Shadow intensity (0-100)
-            <input id="shadowIntensity" type="number" min="0" max="100" value="0" />
-          </label>
-          <label>
-            Stroke intensity (0-10)
-            <input id="strokeIntensity" type="number" min="0" max="10" value="0" />
-          </label>
+            <label>
+              Shadow intensity (0-100)
+              <input id="shadowIntensity" type="number" min="0" max="100" value="0" />
+            </label>
+            <label>
+              Stroke intensity (0-10)
+              <input id="strokeIntensity" type="number" min="0" max="10" value="0" />
+            </label>
 
-          <!-- Color Picker Popover -->
-          <div id="colorPickerBackdrop" class="color-picker-backdrop" hidden></div>
-          <div id="colorPickerPopover" class="color-picker-popover" hidden>
-            <div class="color-picker-content">
-              <div class="color-picker-row">
-                <input id="textColorHex" type="text" value="#ffffff" maxlength="7" spellcheck="false"
-                  placeholder="#ffffff" />
-                <input id="textColor" type="color" value="#ffffff" />
-              </div>
-              <div class="color-picker-opacity">
-                <label>
-                  <span>Opacity</span>
-                  <input id="textOpacity" type="range" min="0" max="100" value="100" />
-                  <span id="textOpacityValue">100%</span>
-                </label>
+            <!-- Color Picker Popover -->
+            <div id="colorPickerBackdrop" class="color-picker-backdrop" hidden></div>
+            <div id="colorPickerPopover" class="color-picker-popover" hidden>
+              <div class="color-picker-content">
+                <div class="color-picker-row">
+                  <input id="textColorHex" type="text" value="#ffffff" maxlength="7" spellcheck="false"
+                    placeholder="#ffffff" />
+                  <input id="textColor" type="color" value="#ffffff" />
+                </div>
+                <div class="color-picker-opacity">
+                  <label>
+                    <span>Opacity</span>
+                    <input id="textOpacity" type="range" min="0" max="100" value="100" />
+                    <span id="textOpacityValue">100%</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
 
-        </div>
-        <h2>Slide animation</h2>
-        <div class="panel--settings">
-          <label>
-            Transition type
-            <select id="transitionType">
-              <option value="crossfade">Crossfade</option>
-              <option value="fade">Fade (sequential)</option>
-              <option value="slide-left">Slide left</option>
-              <option value="slide-right">Slide right</option>
-              <option value="slide-up">Slide up</option>
-              <option value="slide-down">Slide down</option>
-              <option value="zoom-in">Zoom in</option>
-              <option value="zoom-out">Zoom out</option>
-              <option value="none">None (instant)</option>
-            </select>
-          </label>
-          <label>
-            Duration (ms)
-            <input id="transitionDuration" type="number" min="0" max="2000" step="50" value="200" />
-          </label>
-        </div>
-      </section>
-      <section class="panel panel--autoplay panel--sidebar">
-        <h2>Autoplay</h2>
-        <div class="panel--settings">
-          <label>
-            Interval (ms)
-            <input id="autoplayInterval" type="number" min="500" max="60000" step="100" value="5000" />
-          </label>
-          <label class="label-with-inline-trigger">
-            <div class="input-with-trigger">
-              <input type="checkbox" id="showProgressBar" checked style="width:auto; margin:0;">
-              <span class="label-text" style="display:inline; margin-left: 8px;">Show Progress Bar</span>
-            </div>
-          </label>
-          <button type="button" class="btn" id="autoplayToggleBtn">Start Autoplay</button>
-        </div>
-      </section>
-      <section class="panel panel--editor">
-        <header class="panel__header">
-          <h2>Text input</h2>
-          <div class="toolbar">
-            <button type="button" data-action="insert-delimiter">Insert ---</button>
           </div>
-        </header>
-        <textarea id="slidesTextarea"
-          placeholder="Paste your text here. Use --- on a blank line to create multiple slides."
-          spellcheck="false"></textarea>
-        <details class="markdown-help">
-          <summary>📖 Markdown syntax supported</summary>
-          <ul class="markdown-help__list">
-            <li><code>**bold**</code> or <code>__bold__</code> → <strong>bold</strong></li>
-            <li><code>*italic*</code> or <code>_italic_</code> → <em>italic</em></li>
-            <li><code>~~strike~~</code> → <del>strikethrough</del></li>
-            <li><code># Heading</code> → Headings (H1-H6)</li>
-            <li><code>[text](url)</code> → Links</li>
-            <li><code>![alt](url)</code> → Images</li>
-            <li><code>- item</code> → Unordered lists</li>
-            <li><code>1. item</code> → Ordered lists</li>
-            <li><code>`code`</code> → Inline code</li>
-            <li><code>```code```</code> → Code blocks</li>
-            <li><code>&gt; quote</code> → Blockquotes</li>
-          </ul>
-        </details>
-        <button type="button" class="btn btn--primary" data-action="add-slides">Add slides</button>
-      </section>
-      <section class="panel panel--preview">
-        <header class="panel__header panel__header--sticky">
-          <h2>Slides preview</h2>
-          <div class="preview__actions">
-            <span class="preview__count" data-preview-count>0 slides</span>
-            <button type="button" class="btn btn--small" data-action="export-json" title="Save backup">Backup</button>
-            <button type="button" class="btn btn--small" data-action="import-json"
-              title="Restore backup">Restore</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;" />
-            <button type="button" class="btn btn--small" data-action="toggle-loop"
-              data-loop-enabled="true">Loop</button>
-            <button type="button" class="btn btn--danger btn--small" data-action="clear-all" disabled>Clear</button>
+          <h2>Slide animation</h2>
+          <div class="panel--settings">
+            <label>
+              Transition type
+              <select id="transitionType">
+                <option value="crossfade">Crossfade</option>
+                <option value="fade">Fade (sequential)</option>
+                <option value="slide-left">Slide left</option>
+                <option value="slide-right">Slide right</option>
+                <option value="slide-up">Slide up</option>
+                <option value="slide-down">Slide down</option>
+                <option value="zoom-in">Zoom in</option>
+                <option value="zoom-out">Zoom out</option>
+                <option value="none">None (instant)</option>
+              </select>
+            </label>
+            <label>
+              Duration (ms)
+              <input id="transitionDuration" type="number" min="0" max="2000" step="50" value="200" />
+            </label>
           </div>
-        </header>
-        <div id="preview" class="preview__slides">
-          <p class="preview__empty">No slides yet. Add content using the editor above.</p>
-        </div>
-      </section>
-    </main>
+        </section>
 
-    <details class="panel panel--status">
-      <summary class="status__summary">
-        <header class="panel__header">
-          <h2>Status</h2>
-          <span class="pill pill--success" data-status-pill>Booting</span>
-        </header>
-      </summary>
-      <div class="status__body">
-        <div class="status__meta">
-          <span class="target__label">Storage</span>
-          <code class="target__path">Local (per OBS instance)</code>
-        </div>
-        <ul id="statusLog" class="list list--log">
-          <li>[Init] Waiting for editor input…</li>
-        </ul>
+        <section class="panel panel--autoplay panel--sidebar">
+          <h2>Autoplay</h2>
+          <div class="panel--settings">
+            <label>
+              Interval (ms)
+              <input id="autoplayInterval" type="number" min="500" max="60000" step="100" value="5000" />
+            </label>
+            <label class="label-with-inline-trigger">
+              <div class="input-with-trigger">
+                <input type="checkbox" id="showProgressBar" checked style="width:auto; margin:0;">
+                <span class="label-text" style="display:inline; margin-left: 8px;">Show Progress Bar</span>
+              </div>
+            </label>
+            <button type="button" class="btn" id="autoplayToggleBtn">Start Autoplay</button>
+          </div>
+        </section>
+
       </div>
-    </details>
+
+      <!-- Right Column: Content (Editor + Preview) -->
+      <div class="col-content-wrapper">
+
+        <section class="panel panel--editor">
+          <header class="panel__header">
+            <h2>Text input</h2>
+            <div class="toolbar">
+              <button type="button" data-action="insert-delimiter">Insert ---</button>
+            </div>
+          </header>
+          <textarea id="slidesTextarea"
+            placeholder="Paste your text here. Use --- on a blank line to create multiple slides."
+            spellcheck="false"></textarea>
+          <details class="markdown-help">
+            <summary>📖 Markdown syntax supported</summary>
+            <ul class="markdown-help__list">
+              <li><code>**bold**</code> or <code>__bold__</code> → <strong>bold</strong></li>
+              <li><code>*italic*</code> or <code>_italic_</code> → <em>italic</em></li>
+              <li><code>~~strike~~</code> → <del>strikethrough</del></li>
+              <li><code># Heading</code> → Headings (H1-H6)</li>
+              <li><code>[text](url)</code> → Links</li>
+              <li><code>![alt](url)</code> → Images</li>
+              <li><code>- item</code> → Unordered lists</li>
+              <li><code>1. item</code> → Ordered lists</li>
+              <li><code>`code`</code> → Inline code</li>
+              <li><code>```code```</code> → Code blocks</li>
+              <li><code>&gt; quote</code> → Blockquotes</li>
+            </ul>
+          </details>
+          <button type="button" class="btn btn--primary" data-action="add-slides">Add slides</button>
+        </section>
+
+        <div class="preview-stack">
+          <section class="panel panel--preview">
+            <header class="panel__header">
+            <h2>Slides preview</h2>
+            <div class="preview__actions">
+              <span class="preview__count" data-preview-count>0 slides</span>
+              <button type="button" class="btn btn--small" data-action="export-json" title="Save backup">Backup</button>
+              <button type="button" class="btn btn--small" data-action="import-json"
+                title="Restore backup">Restore</button>
+              <input type="file" id="importFile" accept=".json" style="display: none;" />
+              <button type="button" class="btn btn--small" data-action="toggle-loop"
+                data-loop-enabled="true">Loop</button>
+              <button type="button" class="btn btn--danger btn--small" data-action="clear-all" disabled>Clear</button>
+            </div>
+            </header>
+            <div id="preview" class="preview__slides">
+              <p class="preview__empty">No slides yet. Add content using the editor above.</p>
+            </div>
+          </section>
+
+          <!-- Status Panel (always at end, glued to Slides preview) -->
+          <details class="panel panel--status">
+          <summary class="status__summary">
+            <header class="panel__header">
+              <h2>Status</h2>
+              <span class="pill pill--success" data-status-pill>Booting</span>
+            </header>
+          </summary>
+          <div class="status__body">
+            <div class="status__meta">
+              <span class="target__label">Storage</span>
+              <code class="target__path">Local (per OBS instance)</code>
+            </div>
+            <ul id="statusLog" class="list list--log">
+              <li>[Init] Waiting for editor input…</li>
+            </ul>
+          </div>
+          </details>
+        </div>
+
+      </div>
+    </main>
 
 
     <!-- Clear Confirmation Modal -->

@@ -1,26 +1,57 @@
 # Changelog
 
-## [2.2.0] - 2025-12-13
-### Features
-- **Backup & Restore**: Added ability to export and import slideshow configurations (JSON).
-- **Global Animation Upgrade**: Implemented "Double Buffer" logic for all transitions, enabling simultaneous smooth animations.
-- **Safety Modal**: Replaced browser alerts with a custom OBS-themed confirmation modal for "Clear All".
+## [2.3.1] - 2025-12-13
 
-### Improvements
-- **Push Animation**: Revamped to a "Screen Push" effect using viewport units (`100vw`/`100vh`) for perfect lockstep motion (no gaps/overlaps). Added "Expo Soft Stop" easing.
-- **Slide Animation**: Updated to a "Cover" effect (Parallax).
-- **Zoom Animation**: Refined to a cleaner "Static Fade Out / Active Zoom In" style.
-- **Crossfade**: Fixed to be a True Crossfade (overlapping).
-- **UI**: Simplified transition options (Removed legacy/rough Push variants).
+### Fixed
+- Dock responsive layout: up to 3 columns, consistent spacing between columns, improved slides preview responsiveness, and better dropdown chevron spacing.
+
+---
+
+## [2.3.0] - 2025-12-13
+
+### Added
+- Autoplay system: dedicated Autoplay panel with configurable interval, stop/start toggle, and loop integration.
+- Loading animations: Play buttons display a spinner while a slide transition is active.
+- Queue system: animation queue to handle multiple rapid clicks smoothly without glitches.
+- Progress bar control: option to show/hide the progress bar during transitions/autoplay.
+
+### Fixed
+- New slide bug: newly added slides wouldn't animate due to duplicate IDs.
+- Layout shifts: play button resizing when spinner is active.
+- UI: aligned Autoplay panel styling with other setting sections.
+
+---
+
+## [2.2.0] - 2025-12-13
+
+### Added
+- Backup & Restore: export/import slideshow configurations (JSON).
+- Global animation upgrade: "Double Buffer" logic for all transitions.
+- Safety modal: replaced browser alerts with a custom confirmation modal for "Clear All".
+
+### Changed
+- Push animation: revamped to a "Screen Push" effect using viewport units (`100vw`/`100vh`) for perfect lockstep motion (no gaps/overlaps); added "Expo Soft Stop" easing.
+- Slide animation: updated to a "Cover" effect (parallax).
+- Zoom animation: refined to a cleaner "Static Fade Out / Active Zoom In" style.
+- Crossfade: fixed to be a true crossfade (overlapping).
+- UI: simplified transition options (removed legacy/rough Push variants).
 
 ### Removed
-- **Legacy Push**: Removed rough percentage-based Push animations from UI and CSS.
+- Legacy Push: removed rough percentage-based Push animations from UI and CSS.
+
+---
 
 ## [2.1.0] - 2024-03-20
-### Features
+
+### Added
 - Auto-loop functionality.
 - Markdown support enhancements.
 
+---
+
 ## [2.0.0] - 2024-01-15
-### Features
-- Initial Release.
+
+### Added
+- Initial release.
+
+---
