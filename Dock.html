@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HTML Text Slideshow Dock v2.2.0</title>
+  <title>HTML Text Slideshow Dock v2.3.0</title>
   <style>
     :root {
       color-scheme: dark;
@@ -685,7 +685,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 28px;
+      width: 28px;
+      height: 24px;
+      flex-shrink: 0;
     }
 
     .preview__slide-play:hover {
@@ -891,6 +893,25 @@
       justify-content: flex-end;
       margin-top: 8px;
     }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .icon-spin {
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      min-height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
@@ -1022,6 +1043,22 @@
             Duration (ms)
             <input id="transitionDuration" type="number" min="0" max="2000" step="50" value="200" />
           </label>
+        </div>
+      </section>
+      <section class="panel panel--autoplay panel--sidebar">
+        <h2>Autoplay</h2>
+        <div class="panel--settings">
+          <label>
+            Interval (ms)
+            <input id="autoplayInterval" type="number" min="500" max="60000" step="100" value="5000" />
+          </label>
+          <label class="label-with-inline-trigger">
+            <div class="input-with-trigger">
+              <input type="checkbox" id="showProgressBar" checked style="width:auto; margin:0;">
+              <span class="label-text" style="display:inline; margin-left: 8px;">Show Progress Bar</span>
+            </div>
+          </label>
+          <button type="button" class="btn" id="autoplayToggleBtn">Start Autoplay</button>
         </div>
       </section>
       <section class="panel panel--editor">
@@ -1297,6 +1334,10 @@
 
     var draggedSlideIndex = null;
 
+    // Animation Queue Visualization
+    var lastAnimationFinishTime = 0;
+    var pendingAnimations = {}; // { index: endTime }
+
     var STATE_STORAGE_KEY = "htmlTextSlideshow.state";
     var DELIMITER = "\n\n---\n\n";
 
@@ -1357,6 +1398,7 @@
         markdown: true,
         transitionType: "crossfade",
         transitionDuration: 200,
+        showProgressBar: true,
       },
       slides: [
         {
@@ -1386,7 +1428,8 @@
       playlist: {
         mode: "manual",
         loop: true,
-        autoAdvanceMs: 0,
+        autoAdvanceMs: 5000,
+        isPlaying: false,
       },
     };
 
@@ -1460,7 +1503,11 @@
       if (strokeIntensityInput) strokeIntensityInput.value = String(state.settings.strokeIntensity != null ? state.settings.strokeIntensity : 0);
       if (transitionTypeSelect) transitionTypeSelect.value = state.settings.transitionType || "crossfade";
       if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
+      if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
+      if (showProgressBarInput) showProgressBarInput.checked = state.settings.showProgressBar !== false;
+
       updateLoopButton();
+      updateAutoplayUi();
       renderPreview();
       updateClearAllButton();
     }
@@ -1489,7 +1536,14 @@
         html += '<span>Slide ' + (i + 1) + '</span>';
         html += '</div>';
         html += '<div class="preview__slide-actions">';
-        html += '<button type="button" class="preview__slide-play" data-play-index="' + i + '" title="Show this slide">▶</button>';
+
+        var isPending = pendingAnimations[i] && pendingAnimations[i] > Date.now();
+        if (isPending) {
+          html += '<button type="button" class="preview__slide-play" disabled title="Queued…"><span class="icon-spin"></span></button>';
+        } else {
+          html += '<button type="button" class="preview__slide-play" data-play-index="' + i + '" title="Show this slide">▶</button>';
+        }
+
         html += '<button type="button" class="preview__slide-delete" data-delete-index="' + i + '" title="Delete this slide">Delete</button>';
         html += '</div>';
         html += '</div>';
@@ -1514,8 +1568,10 @@
         var chunk = chunks[i].trim();
         if (!chunk) continue;
         var lines = chunk.split("\n");
+        // FIX: Use unique IDs to ensure animations filter triggers correctly
+        var uniqueId = "slide-" + Date.now() + "-" + i + "-" + Math.floor(Math.random() * 1000);
         results.push({
-          id: "slide-" + String(i + 1).padStart(10, "0"),
+          id: uniqueId,
           title: lines[0] || "Slide " + (i + 1),
           body: chunk,
           raw: chunk,
@@ -1603,7 +1659,7 @@
         playButtons[i].addEventListener("click", function (e) {
           e.stopPropagation();
           var index = parseInt(this.dataset.playIndex, 10);
-          setActiveSlide(index, "manual-play");
+          setActiveSlide(index, "manual-play", this);
         });
       }
 
@@ -1626,7 +1682,6 @@
         slides[i].addEventListener("dragleave", handleDragLeave);
       }
     }
-
     function handleDragStart(e) {
       draggedSlideIndex = parseInt(e.currentTarget.dataset.slideIndex, 10);
       e.currentTarget.classList.add("dragging");
@@ -1758,6 +1813,89 @@
 
     var debouncedUpdateSettings = debounce(updateSettings, 300);
 
+    // --- Autoplay Logic ---
+    var autoplayIntervalId = null;
+    var autoplayIntervalInput = document.getElementById("autoplayInterval");
+    var autoplayToggleBtn = document.getElementById("autoplayToggleBtn");
+    var showProgressBarInput = document.getElementById("showProgressBar");
+
+    function updateAutoplayUi() {
+      if (!state.playlist) return;
+      var isPlaying = state.playlist.isPlaying;
+      var interval = state.playlist.autoAdvanceMs || 5000;
+
+      if (autoplayIntervalInput) autoplayIntervalInput.value = interval;
+
+      if (autoplayToggleBtn) {
+        // Force refresh classes by removing both first
+        autoplayToggleBtn.classList.remove("btn--danger", "btn--info");
+
+        if (isPlaying) {
+          autoplayToggleBtn.textContent = "Stop Autoplay";
+          autoplayToggleBtn.classList.add("btn--danger");
+        } else {
+          autoplayToggleBtn.textContent = "Start Autoplay";
+          autoplayToggleBtn.classList.add("btn--info");
+        }
+      }
+
+      // Manage Timer
+      if (isPlaying && !autoplayIntervalId) {
+        startAutoplayTimer();
+      } else if (!isPlaying && autoplayIntervalId) {
+        stopAutoplayTimer();
+      }
+    }
+
+    function toggleAutoplay() {
+      if (!state.playlist) state.playlist = { mode: "manual", loop: true, autoAdvanceMs: 5000, isPlaying: false };
+      state.playlist.isPlaying = !state.playlist.isPlaying;
+
+      if (autoplayIntervalInput) {
+        var val = parseInt(autoplayIntervalInput.value, 10);
+        if (!isNaN(val) && val >= 500) {
+          state.playlist.autoAdvanceMs = val;
+        }
+      }
+
+      updateAutoplayUi();
+      persistState("toggle-autoplay");
+    }
+
+    function startAutoplayTimer() {
+      stopAutoplayTimer();
+      var ms = state.playlist.autoAdvanceMs || 5000;
+      autoplayIntervalId = setInterval(function () {
+        handleNextSlide("autoplay");
+      }, ms);
+      appendStatusLog("Autoplay started (" + ms + "ms).");
+    }
+
+    function stopAutoplayTimer() {
+      if (autoplayIntervalId) {
+        clearInterval(autoplayIntervalId);
+        autoplayIntervalId = null;
+      }
+      appendStatusLog("Autoplay stopped.");
+    }
+
+    function updateAutoplayInterval() {
+      if (!autoplayIntervalInput) return;
+      var val = parseInt(autoplayIntervalInput.value, 10);
+      if (isNaN(val) || val < 500) return;
+
+      state.playlist.autoAdvanceMs = val;
+
+      // If playing, restart timer with new speed
+      if (state.playlist.isPlaying) {
+        startAutoplayTimer();
+      }
+
+      // Note: we don't persist on every keystroke here, maybe debounce later, but input 'change' is fine.
+      persistState("update-autoplay-interval");
+    }
+
+
     function renderStatus(text, tone) {
       if (!tone) tone = "neutral";
       if (!statusPill) return;
@@ -1778,14 +1916,52 @@
       }
     }
 
-    function setActiveSlide(index, reason) {
+    // Map to store pending animation end times for each slide index
+    var pendingAnimations = {};
+    // Tracks when the last animation is expected to finish
+    var lastAnimationFinishTime = 0;
+
+    function setActiveSlide(index, reason, triggerBtn) {
       if (!reason) reason = "manual";
-      if (!state.slides.length) return;
+      if (!state.slides.length || index < 0) return;
       var clamped = Math.max(0, Math.min(index, state.slides.length - 1));
-      if (clamped === state.activeSlideIndex) return;
+
+      // Update state immediately
       state.activeSlideIndex = clamped;
-      renderPreview();
       persistState(reason);
+
+      // Calculate queue timing
+      var now = Date.now();
+      var duration = (state.settings && state.settings.transitionDuration) || 200;
+      // Buffer allows slightly better visual pacing
+      var effectiveDuration = duration + 50;
+
+      // If the last animation finished in the past, start "now".
+      // If it finishes in the future, start after that.
+      var startTime = Math.max(now, lastAnimationFinishTime);
+      var endTime = startTime + effectiveDuration;
+
+      lastAnimationFinishTime = endTime;
+      pendingAnimations[clamped] = endTime;
+
+      // Update UI immediately to show spinner
+      renderPreview();
+
+      // Schedule cleanup
+      var timeUntilFinish = endTime - now;
+      setTimeout(function () {
+        // Only remove if it hasn't been updated to a later time (rare but possible if clicked again)
+        if (pendingAnimations[clamped] === endTime) {
+          delete pendingAnimations[clamped];
+          // Re-render to show "Play" button again or active state
+          renderPreview();
+        }
+      }, timeUntilFinish);
+
+      // Reset Autoplay Timer on manual interaction to avoid double-jumps
+      if (state.playlist && state.playlist.isPlaying) {
+        startAutoplayTimer();
+      }
     }
 
     function handleNextSlide(reason) {
@@ -1798,6 +1974,15 @@
         if (state.playlist && state.playlist.loop) {
           setActiveSlide(0, reason);
           appendStatusLog("Loop: returned to first slide.");
+        } else {
+          // Stop Autoplay if loop is disabled and we reached the end
+          if (state.playlist && state.playlist.isPlaying) {
+            // Explicitly turn it off to ensure state is clean
+            state.playlist.isPlaying = false;
+            updateAutoplayUi();
+            persistState("autoplay-finished");
+            appendStatusLog("Autoplay finished (end of playlist).");
+          }
         }
       } else {
         setActiveSlide(nextIndex, reason);
@@ -1959,7 +2144,15 @@
       if (shadowIntensityInput) shadowIntensityInput.addEventListener("input", function () { debouncedUpdateSettings("shadow intensity"); });
       if (strokeIntensityInput) strokeIntensityInput.addEventListener("input", function () { debouncedUpdateSettings("stroke intensity"); });
       if (transitionTypeSelect) transitionTypeSelect.addEventListener("change", function () { updateSettings("transition type"); });
+      if (transitionTypeSelect) transitionTypeSelect.addEventListener("change", function () { updateSettings("transition type"); });
       if (transitionDurationInput) transitionDurationInput.addEventListener("input", function () { debouncedUpdateSettings("transition duration"); });
+
+      if (autoplayToggleBtn) autoplayToggleBtn.addEventListener("click", toggleAutoplay);
+      if (autoplayIntervalInput) autoplayIntervalInput.addEventListener("change", updateAutoplayInterval);
+      if (showProgressBarInput) showProgressBarInput.addEventListener("change", function () {
+        state.settings.showProgressBar = showProgressBarInput.checked;
+        persistState("toggle-progress-bar");
+      });
 
       applyStateToUi();
       renderStatus("Ready", "success");

@@ -517,6 +517,36 @@
     var lastTransitionType = null;
     var loadedFonts = {};
 
+    // Animation Queue System
+    var isAnimating = false;
+    var stateQueue = [];
+    var lastReceivedUpdatedAt = null;
+
+    function enqueueState(data) {
+      if (!data) return;
+      // Filter duplicate network messages
+      if (data.updatedAt && data.updatedAt === lastReceivedUpdatedAt) {
+        return;
+      }
+      if (data.updatedAt) lastReceivedUpdatedAt = data.updatedAt;
+
+      if (isAnimating) {
+        stateQueue.push(data);
+      } else {
+        applyState(data);
+      }
+    }
+
+    function onAnimationComplete() {
+      isAnimating = false;
+      if (stateQueue.length > 0) {
+        var next = stateQueue.shift();
+        setTimeout(function () {
+          applyState(next);
+        }, 0);
+      }
+    }
+
     function loadGoogleFont(fontFamily) {
       var fontName = fontFamily.split(',')[0].replace(/['"]/g, '').trim();
 
@@ -556,7 +586,7 @@
         var payload = event && event.data;
         if (!payload || typeof payload !== "object") return;
         if (payload.type === "state") {
-          handleState(payload.payload);
+          enqueueState(payload.payload);
         }
       });
       channel.postMessage({ type: "request-state", source: "browser-overlay" });
@@ -586,7 +616,7 @@
 
           try {
             var data = JSON.parse(xhr.responseText);
-            handleState(data);
+            enqueueState(data);
           } catch (e) {
             setState("error");
             if (bodyEl) {
@@ -611,7 +641,7 @@
       xhr.send();
     }
 
-    function handleState(data) {
+    function applyState(data) {
       var slides = Array.isArray(data && data.slides) ? data.slides : [];
       if (!slides.length) {
         setState("empty");
@@ -619,6 +649,8 @@
           bodyEl.innerHTML = "<p>Waiting for the dock to publish…</p>";
         }
         resetProgress();
+        // Even if empty, ensure we check queue
+        onAnimationComplete();
         return;
       }
 
@@ -626,6 +658,8 @@
       index = Math.min(Math.max(index, 0), slides.length - 1);
 
       if (data.updatedAt === lastUpdatedAt && index === currentIndex) {
+        // No effective change, but ensure we keep queue moving if we came here from queue
+        onAnimationComplete();
         return;
       }
 
@@ -644,8 +678,14 @@
 
       setState("ready");
       applyTypography(slide, settings);
+
+      if (shouldAnimate) {
+        isAnimating = true;
+      }
+
       swapContent(slide, settings, shouldAnimate);
-      updateProgress(slide.durationMs || (data.playlist && data.playlist.autoAdvanceMs) || 0);
+      var autoDuration = (data.playlist && data.playlist.isPlaying) ? (data.playlist.autoAdvanceMs || 0) : 0;
+      updateProgress(slide.durationMs || autoDuration, settings);
 
       if (debugEl && (showDebug || showMeta)) {
         debugEl.querySelector(".debug__state").textContent = "state: ready (#" + (index + 1) + "/" + slides.length + ")";
@@ -735,6 +775,7 @@
       if (transitionType === "none") {
         cleanupClasses();
         bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
+        onAnimationComplete();
         return;
       }
 
@@ -746,7 +787,11 @@
           bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
           bodyEl.classList.remove("transition-out");
           bodyEl.classList.add("transition-in");
-          setTimeout(cleanupClasses, duration);
+          bodyEl.classList.add("transition-in");
+          setTimeout(function () {
+            cleanupClasses();
+            onAnimationComplete();
+          }, duration);
         }, duration);
         return;
       }
@@ -789,30 +834,42 @@
       setTimeout(function () {
         if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
         cleanupClasses();
+        onAnimationComplete();
       }, duration);
     }
 
-    function updateProgress(durationMs) {
+    function updateProgress(durationMs, settings) {
       if (!progressEl) return;
+
+      var show = settings && settings.showProgressBar !== false;
+      if (!show) {
+        progressEl.hidden = true;
+        return;
+      }
+
       if (!durationMs) {
         resetProgress();
         return;
       }
+
       progressEl.hidden = false;
       progressEl.style.transition = "none";
       progressEl.style.width = "0%";
 
-      setTimeout(function () {
-        progressEl.style.transition = "width " + durationMs + "ms linear";
-        progressEl.style.width = "100%";
-      }, 10);
+      // Force reflow
+      progressEl.offsetHeight;
+
+      progressEl.style.transition = "width " + durationMs + "ms linear";
+      progressEl.style.width = "100%";
     }
 
     function resetProgress() {
-      if (!progressEl) return;
-      progressEl.hidden = true;
-      progressEl.style.transition = "none";
-      progressEl.style.width = "0%";
+      if (progressEl) {
+        progressEl.hidden = true;
+        progressEl.style.transition = "none";
+        progressEl.style.width = "0%";
+        progressEl.offsetHeight; // Force reflow
+      }
     }
 
     function setState(value) {
