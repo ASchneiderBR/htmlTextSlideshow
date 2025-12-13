@@ -83,19 +83,30 @@ jobs:
         id: changelog
         if: inputs.release_notes == ''
         run: |
-          # Extract the version entry from CHANGELOG.md
-          # Search for [2.2.0] or [v2.2.0]
+          # Find changelog file (case insensitive)
+          CHANGELOG_FILE=$(find . -maxdepth 1 -iname "changelog.md" | head -n 1)
+          if [ -z "$CHANGELOG_FILE" ]; then
+            echo "⚠️  Changelog file not found."
+            echo "Release $VERSION" > /tmp/release_notes.txt
+            exit 0
+          fi
           
-          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+          echo "Using changelog: $CHANGELOG_FILE"
+
+          # Use grep to check if specific version header exists
+          # We search for "## [2.3.0]" literally
+          if grep -Fq "## [$VERSION]" "$CHANGELOG_FILE"; then
             awk -v version="$VERSION" '
               BEGIN { in_section = 0; found = 0 }
+              # Match header line like "## [2.3.0]..."
+              /^## \[/ && index($0, "[" version "]") { in_section = 1; found = 1; next }
+              # Stop at next header "^## [" or horizontal rule "^---"
               /^## \[/ && found == 1 { exit }
-              /^## \[/ && $0 ~ "\\[" version "\\]" { in_section = 1; found = 1; next }
               /^---$/ && in_section == 1 { exit }
               in_section == 1 { print }
-            ' CHANGELOG.md > /tmp/release_notes.txt
+            ' "$CHANGELOG_FILE" > /tmp/release_notes.txt
           else
-            echo "⚠️  Warning: Version $VERSION not found in CHANGELOG.md"
+            echo "⚠️  Warning: Version $VERSION not found in $CHANGELOG_FILE"
             echo "Release $VERSION" > /tmp/release_notes.txt
           fi
           
