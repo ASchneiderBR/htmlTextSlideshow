@@ -63,7 +63,7 @@ function script_properties()
   local dock_path = "file:///" .. script_dir .. "Dock.html"
   local source_path = script_dir .. "Source.html"
   
-  obs.obs_properties_add_text(props, "about", "OBS Text Slideshow v2.0 - Control on-stream text slides with markdown formatting, advanced typography, and transitions.", obs.OBS_TEXT_INFO)
+  obs.obs_properties_add_text(props, "about", "OBS Text Slideshow v2.2.0 - Control on-stream text slides with markdown formatting, advanced typography, and transitions.", obs.OBS_TEXT_INFO)
   
   obs.obs_properties_add_text(props, "instr_1", "STEP 1: Add Custom Dock (View > Docks > Custom Browser Docks)", obs.OBS_TEXT_INFO)
   local p_dock = obs.obs_properties_add_text(props, "dock_url", "Dock URL (copy this)", obs.OBS_TEXT_DEFAULT)

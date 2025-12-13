@@ -1,810 +1,832 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML Text Slideshow Overlay</title>
-    <style>
-:root {
-  color-scheme: dark;
-  --font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-size-min: 22px;
-  --font-size-max: 110px;
-  --font-size-target: 42;
-  --text-color: #ffffff;
-  --shadow: 0 0 30px rgba(0, 0, 0, 0.6);
-  --transition-ms: 200ms;
-  --transition-duration: 200ms;
-}
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML Text Slideshow Overlay v2.2.0</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      --font-size-min: 22px;
+      --font-size-max: 110px;
+      --font-size-target: 42;
+      --text-color: #ffffff;
+      --shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+      --transition-ms: 200ms;
+      --transition-duration: 200ms;
+    }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  font-family: var(--font-family);
-}
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
-#app {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--text-color);
-}
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      font-family: var(--font-family);
+    }
 
-.slide-container {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-color);
+    }
 
-.slide-body {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  font-size: calc(var(--font-size-target) * 1px);
-  line-height: 1.2;
-  text-shadow: var(--shadow);
-  opacity: 1;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
+    .slide-container {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
 
-.slide-body.is-hidden {
-  opacity: 0;
-}
+    .slide-body {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      font-size: calc(var(--font-size-target) * 1px);
+      line-height: 1.2;
+      text-shadow: var(--shadow);
+      opacity: 1;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      transition: opacity 0s;
+    }
 
-.slide-body > *:first-child {
-  margin-top: 0;
-}
+    .slide-ghost {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* Match body sizing */
+    }
 
-.slide-body > *:last-child {
-  margin-bottom: 0;
-}
+    .slide-body {
+      position: relative;
+      z-index: 2;
+    }
 
-ul, ol {
-  display: inline-block;
-  text-align: left;
-  margin: 0;
-  padding-left: 1.5em;
-  max-width: 100%;
-}
+    .slide-body.is-hidden {
+      opacity: 0;
+    }
 
-li {
-  margin-bottom: 0.2em;
-}
+    .slide-body>*:first-child {
+      margin-top: 0;
+    }
 
-.slide-body[class*="transition-"] {
-  will-change: opacity, transform;
-}
+    .slide-body>*:last-child {
+      margin-bottom: 0;
+    }
 
-.slide-body.transition-out {
-  animation: fadeOut var(--transition-duration) ease-out forwards;
-}
+    ul,
+    ol {
+      display: inline-block;
+      text-align: left;
+      margin: 0;
+      padding-left: 1.5em;
+      max-width: 100%;
+    }
 
-.slide-body.transition-in {
-  animation: fadeIn var(--transition-duration) ease-in forwards;
-}
+    li {
+      margin-bottom: 0.2em;
+    }
 
-@keyframes fadeOut {
-  from { 
-    opacity: 1; 
-    transform: translateZ(0);
-  }
-  to { 
-    opacity: 0; 
-    transform: translateZ(0);
-  }
-}
+    .slide-body[class*="transition-"] {
+      will-change: opacity, transform;
+    }
 
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateZ(0);
-  }
-  to { 
-    opacity: 1; 
-    transform: translateZ(0);
-  }
-}
+    .slide-body.transition-out {
+      animation: fadeOut var(--transition-duration) ease-out forwards;
+    }
 
-.slide-body.transition-slide-left-out {
-  animation: slideLeftOut var(--transition-duration) ease-out forwards;
-}
+    .slide-body.transition-in {
+      animation: fadeIn var(--transition-duration) ease-in forwards;
+    }
 
-.slide-body.transition-slide-left-in {
-  animation: slideLeftIn var(--transition-duration) ease-out forwards;
-}
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateZ(0);
+      }
 
-@keyframes slideLeftOut {
-  from { transform: translateX(0) translateZ(0); opacity: 1; }
-  to { transform: translateX(-50%) translateZ(0); opacity: 0; }
-}
+      to {
+        opacity: 0;
+        transform: translateZ(0);
+      }
+    }
 
-@keyframes slideLeftIn {
-  from { transform: translateX(50%) translateZ(0); opacity: 0; }
-  to { transform: translateX(0) translateZ(0); opacity: 1; }
-}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateZ(0);
+      }
 
-.slide-body.transition-slide-right-out {
-  animation: slideRightOut var(--transition-duration) ease-out forwards;
-}
+      to {
+        opacity: 1;
+        transform: translateZ(0);
+      }
+    }
 
-.slide-body.transition-slide-right-in {
-  animation: slideRightIn var(--transition-duration) ease-out forwards;
-}
+    /* SLIDE (Cover Effect) */
+    .slide-body.transition-slide-left-out {
+      animation: slideLeftOut var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes slideRightOut {
-  from { transform: translateX(0) translateZ(0); opacity: 1; }
-  to { transform: translateX(50%) translateZ(0); opacity: 0; }
-}
+    .slide-body.transition-slide-left-in {
+      animation: slideLeftIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes slideRightIn {
-  from { transform: translateX(-50%) translateZ(0); opacity: 0; }
-  to { transform: translateX(0) translateZ(0); opacity: 1; }
-}
+    @keyframes slideLeftOut {
+      to {
+        transform: translateX(-20%) scale(0.9);
+        opacity: 0;
+      }
+    }
 
-.slide-body.transition-slide-up-out {
-  animation: slideUpOut var(--transition-duration) ease-out forwards;
-}
+    @keyframes slideLeftIn {
+      from {
+        transform: translateX(100%);
+      }
 
-.slide-body.transition-slide-up-in {
-  animation: slideUpIn var(--transition-duration) ease-out forwards;
-}
+      to {
+        transform: translateX(0);
+      }
+    }
 
-@keyframes slideUpOut {
-  from { transform: translateY(0) translateZ(0); opacity: 1; }
-  to { transform: translateY(-50%) translateZ(0); opacity: 0; }
-}
+    .slide-body.transition-slide-right-out {
+      animation: slideRightOut var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes slideUpIn {
-  from { transform: translateY(50%) translateZ(0); opacity: 0; }
-  to { transform: translateY(0) translateZ(0); opacity: 1; }
-}
+    .slide-body.transition-slide-right-in {
+      animation: slideRightIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-.slide-body.transition-slide-down-out {
-  animation: slideDownOut var(--transition-duration) ease-out forwards;
-}
+    @keyframes slideRightOut {
+      to {
+        transform: translateX(20%) scale(0.9);
+        opacity: 0;
+      }
+    }
 
-.slide-body.transition-slide-down-in {
-  animation: slideDownIn var(--transition-duration) ease-out forwards;
-}
+    @keyframes slideRightIn {
+      from {
+        transform: translateX(-100%);
+      }
 
-@keyframes slideDownOut {
-  from { transform: translateY(0) translateZ(0); opacity: 1; }
-  to { transform: translateY(50%) translateZ(0); opacity: 0; }
-}
+      to {
+        transform: translateX(0);
+      }
+    }
 
-@keyframes slideDownIn {
-  from { transform: translateY(-50%) translateZ(0); opacity: 0; }
-  to { transform: translateY(0) translateZ(0); opacity: 1; }
-}
+    .slide-body.transition-slide-up-out {
+      animation: slideUpOut var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-.slide-body.transition-zoom-in-out {
-  animation: zoomInOut var(--transition-duration) ease-out forwards;
-}
+    .slide-body.transition-slide-up-in {
+      animation: slideUpIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-.slide-body.transition-zoom-in-in {
-  animation: zoomInIn var(--transition-duration) ease-out forwards;
-}
+    @keyframes slideUpOut {
+      to {
+        transform: translateY(-20%) scale(0.9);
+        opacity: 0;
+      }
+    }
 
-@keyframes zoomInOut {
-  from { transform: scale(1) translateZ(0); opacity: 1; }
-  to { transform: scale(1.5) translateZ(0); opacity: 0; }
-}
+    @keyframes slideUpIn {
+      from {
+        transform: translateY(100%);
+      }
 
-@keyframes zoomInIn {
-  from { transform: scale(0.5) translateZ(0); opacity: 0; }
-  to { transform: scale(1) translateZ(0); opacity: 1; }
-}
+      to {
+        transform: translateY(0);
+      }
+    }
 
-.slide-body.transition-zoom-out-out {
-  animation: zoomOutOut var(--transition-duration) ease-out forwards;
-}
+    .slide-body.transition-slide-down-out {
+      animation: slideDownOut var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-.slide-body.transition-zoom-out-in {
-  animation: zoomOutIn var(--transition-duration) ease-out forwards;
-}
+    .slide-body.transition-slide-down-in {
+      animation: slideDownIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes zoomOutOut {
-  from { transform: scale(1) translateZ(0); opacity: 1; }
-  to { transform: scale(0.5) translateZ(0); opacity: 0; }
-}
+    @keyframes slideDownOut {
+      to {
+        transform: translateY(20%) scale(0.9);
+        opacity: 0;
+      }
+    }
 
-@keyframes zoomOutIn {
-  from { transform: scale(1.5) translateZ(0); opacity: 0; }
-  to { transform: scale(1) translateZ(0); opacity: 1; }
-}
+    @keyframes slideDownIn {
+      from {
+        transform: translateY(-100%);
+      }
 
-.slide-body.transition-push-left-out {
-  animation: pushLeftOut var(--transition-duration) linear forwards;
-}
+      to {
+        transform: translateY(0);
+      }
+    }
 
-.slide-body.transition-push-left-in {
-  animation: pushLeftIn var(--transition-duration) linear forwards;
-}
+    /* ZOOM (Static Fade Out, Active Zoom In) */
+    .slide-body.transition-zoom-in-out {
+      animation: fadeOut var(--transition-duration) ease-out forwards;
+    }
 
-@keyframes pushLeftOut {
-  from { transform: translateX(0) translateZ(0); opacity: 1; }
-  to { transform: translateX(-100%) translateZ(0); opacity: 1; }
-}
+    .slide-body.transition-zoom-in-in {
+      animation: zoomInIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes pushLeftIn {
-  from { transform: translateX(100%) translateZ(0); opacity: 1; }
-  to { transform: translateX(0) translateZ(0); opacity: 1; }
-}
+    @keyframes zoomInIn {
+      from {
+        transform: scale(0.9);
+        opacity: 0;
+      }
 
-.slide-body.transition-push-right-out {
-  animation: pushRightOut var(--transition-duration) linear forwards;
-}
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
 
-.slide-body.transition-push-right-in {
-  animation: pushRightIn var(--transition-duration) linear forwards;
-}
+    .slide-body.transition-zoom-out-out {
+      animation: fadeOut var(--transition-duration) ease-out forwards;
+    }
 
-@keyframes pushRightOut {
-  from { transform: translateX(0) translateZ(0); opacity: 1; }
-  to { transform: translateX(100%) translateZ(0); opacity: 1; }
-}
+    .slide-body.transition-zoom-out-in {
+      animation: zoomOutIn var(--transition-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
 
-@keyframes pushRightIn {
-  from { transform: translateX(-100%) translateZ(0); opacity: 1; }
-  to { transform: translateX(0) translateZ(0); opacity: 1; }
-}
+    @keyframes zoomOutIn {
+      from {
+        transform: scale(1.1);
+        opacity: 0;
+      }
 
-.slide-body.transition-push-up-out {
-  animation: pushUpOut var(--transition-duration) linear forwards;
-}
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
 
-.slide-body.transition-push-up-in {
-  animation: pushUpIn var(--transition-duration) linear forwards;
-}
+    .slide-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      width: 0%;
+      transition: width 0.2s linear;
+    }
 
-@keyframes pushUpOut {
-  from { transform: translateY(0) translateZ(0); opacity: 1; }
-  to { transform: translateY(-100%) translateZ(0); opacity: 1; }
-}
+    .debug {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
 
-@keyframes pushUpIn {
-  from { transform: translateY(100%) translateZ(0); opacity: 1; }
-  to { transform: translateY(0) translateZ(0); opacity: 1; }
-}
+    [data-state="error"] .slide-body {
+      color: #ffb4a2;
+    }
 
-.slide-body.transition-push-down-out {
-  animation: pushDownOut var(--transition-duration) linear forwards;
-}
+    [data-state="empty"] .slide-body {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  </style>
+</head>
 
-.slide-body.transition-push-down-in {
-  animation: pushDownIn var(--transition-duration) linear forwards;
-}
-
-@keyframes pushDownOut {
-  from { transform: translateY(0) translateZ(0); opacity: 1; }
-  to { transform: translateY(100%) translateZ(0); opacity: 1; }
-}
-
-@keyframes pushDownIn {
-  from { transform: translateY(-100%) translateZ(0); opacity: 1; }
-  to { transform: translateY(0) translateZ(0); opacity: 1; }
-}
-
-.slide-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.8);
-  width: 0%;
-  transition: width 0.2s linear;
-}
-
-.debug {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-[data-state="error"] .slide-body {
-  color: #ffb4a2;
-}
-
-[data-state="empty"] .slide-body {
-  color: rgba(255, 255, 255, 0.7);
-}
-    </style>
-  </head>
-  <body>
-    <div id="app" data-state="loading">
-      <div class="slide-container">
-        <div class="slide-body">
-          <p>Waiting for slides…</p>
-        </div>
-        <div class="slide-progress" hidden></div>
+<body>
+  <div id="app" data-state="loading">
+    <div class="slide-container">
+      <div class="slide-body">
+        <p>Waiting for slides…</p>
       </div>
-      <div class="debug" hidden>
-        <span class="debug__state">state: loading</span>
-      </div>
+      <div class="slide-progress" hidden></div>
     </div>
-    <script>
-// Markdown renderer
-var BLOCK_DELIMITER = "\n";
+    <div class="debug" hidden>
+      <span class="debug__state">state: loading</span>
+    </div>
+  </div>
+  <script>
+    // Markdown renderer
+    var BLOCK_DELIMITER = "\n";
 
-function escapeHtml(value) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
-function renderInline(value) {
-  return value
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2" />')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/__([^_]+)__/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/_([^_]+)_/g, "<em>$1</em>")
-    .replace(/~~([^~]+)~~/g, "<del>$1</del>");
-}
+    function renderInline(value) {
+      return value
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2" />')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+        .replace(/_([^_]+)_/g, "<em>$1</em>")
+        .replace(/~~([^~]+)~~/g, "<del>$1</del>");
+    }
 
-function closeList(listState) {
-  if (!listState.type) return "";
-  var closing = listState.type === "ol" ? "</ol>" : "</ul>";
-  listState.type = null;
-  return closing;
-}
+    function closeList(listState) {
+      if (!listState.type) return "";
+      var closing = listState.type === "ol" ? "</ol>" : "</ul>";
+      listState.type = null;
+      return closing;
+    }
 
-function markdownToHtml(markdown) {
-  if (!markdown) markdown = "";
-  var lines = markdown.replace(/\r\n/g, BLOCK_DELIMITER).split(BLOCK_DELIMITER);
-  var html = "";
-  var inCodeBlock = false;
-  var codeFence = "";
-  var listState = { type: null };
+    function markdownToHtml(markdown) {
+      if (!markdown) markdown = "";
+      var lines = markdown.replace(/\r\n/g, BLOCK_DELIMITER).split(BLOCK_DELIMITER);
+      var html = "";
+      var inCodeBlock = false;
+      var codeFence = "";
+      var listState = { type: null };
 
-  var flushParagraph = function(buffer) {
-    if (!buffer.trim()) return;
-    var lines = buffer.trim().split('\n');
-    var processedLines = lines.map(function(line) { return renderInline(escapeHtml(line)); });
-    html += "<p>" + processedLines.join('<br>') + "</p>";
-  };
+      var flushParagraph = function (buffer) {
+        if (!buffer.trim()) return;
+        var lines = buffer.trim().split('\n');
+        var processedLines = lines.map(function (line) { return renderInline(escapeHtml(line)); });
+        html += "<p>" + processedLines.join('<br>') + "</p>";
+      };
 
-  var paragraphBuffer = "";
-  var paragraphLines = [];
+      var paragraphBuffer = "";
+      var paragraphLines = [];
 
-  for (var i = 0; i < lines.length; i++) {
-    var rawLine = lines[i];
-    var line = rawLine.replace(/\t/g, "    ");
+      for (var i = 0; i < lines.length; i++) {
+        var rawLine = lines[i];
+        var line = rawLine.replace(/\t/g, "    ");
 
-    if (line.trim().startsWith("```")) {
+        if (line.trim().startsWith("```")) {
+          if (inCodeBlock) {
+            html += "<pre><code>" + escapeHtml(codeFence) + "</code></pre>";
+            codeFence = "";
+            inCodeBlock = false;
+          } else {
+            if (paragraphLines.length > 0) {
+              paragraphBuffer = paragraphLines.join('\n');
+              flushParagraph(paragraphBuffer);
+              paragraphBuffer = "";
+              paragraphLines = [];
+            }
+            inCodeBlock = true;
+          }
+          continue;
+        }
+
+        if (inCodeBlock) {
+          codeFence += (codeFence ? "\n" : "") + line;
+          continue;
+        }
+
+        if (!line.trim()) {
+          if (paragraphLines.length > 0) {
+            paragraphBuffer = paragraphLines.join('\n');
+            flushParagraph(paragraphBuffer);
+            paragraphBuffer = "";
+            paragraphLines = [];
+          }
+          html += closeList(listState);
+          continue;
+        }
+
+        var headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          if (paragraphLines.length > 0) {
+            paragraphBuffer = paragraphLines.join('\n');
+            flushParagraph(paragraphBuffer);
+            paragraphBuffer = "";
+            paragraphLines = [];
+          }
+          html += closeList(listState);
+          var level = headingMatch[1].length;
+          html += "<h" + level + ">" + renderInline(escapeHtml(headingMatch[2])) + "</h" + level + ">";
+          continue;
+        }
+
+        var blockquoteMatch = line.match(/^>\s?(.*)$/);
+        if (blockquoteMatch) {
+          if (paragraphLines.length > 0) {
+            paragraphBuffer = paragraphLines.join('\n');
+            flushParagraph(paragraphBuffer);
+            paragraphBuffer = "";
+            paragraphLines = [];
+          }
+          html += closeList(listState);
+          html += "<blockquote>" + renderInline(escapeHtml(blockquoteMatch[1])) + "</blockquote>";
+          continue;
+        }
+
+        var unorderedMatch = line.match(/^[-*+]\s+(.*)$/);
+        if (unorderedMatch) {
+          if (paragraphLines.length > 0) {
+            paragraphBuffer = paragraphLines.join('\n');
+            flushParagraph(paragraphBuffer);
+            paragraphBuffer = "";
+            paragraphLines = [];
+          }
+          if (listState.type !== "ul") {
+            html += closeList(listState);
+            listState.type = "ul";
+            html += "<ul>";
+          }
+          html += "<li>" + renderInline(escapeHtml(unorderedMatch[1])) + "</li>";
+          continue;
+        }
+
+        var orderedMatch = line.match(/^\d+\.\s+(.*)$/);
+        if (orderedMatch) {
+          if (paragraphLines.length > 0) {
+            paragraphBuffer = paragraphLines.join('\n');
+            flushParagraph(paragraphBuffer);
+            paragraphBuffer = "";
+            paragraphLines = [];
+          }
+          if (listState.type !== "ol") {
+            html += closeList(listState);
+            listState.type = "ol";
+            html += "<ol>";
+          }
+          html += "<li>" + renderInline(escapeHtml(orderedMatch[1])) + "</li>";
+          continue;
+        }
+
+        paragraphLines.push(line.trim());
+      }
+
+      if (paragraphLines.length > 0) {
+        paragraphBuffer = paragraphLines.join('\n');
+        flushParagraph(paragraphBuffer);
+      }
+
+      html += closeList(listState);
+
       if (inCodeBlock) {
         html += "<pre><code>" + escapeHtml(codeFence) + "</code></pre>";
-        codeFence = "";
-        inCodeBlock = false;
-      } else {
-        if (paragraphLines.length > 0) {
-          paragraphBuffer = paragraphLines.join('\n');
-          flushParagraph(paragraphBuffer);
-          paragraphBuffer = "";
-          paragraphLines = [];
+      }
+
+      return html || "<p></p>";
+    }
+
+    // Main overlay application
+    var appEl = document.querySelector("#app");
+    var bodyEl = document.querySelector(".slide-body");
+    var containerEl = document.querySelector(".slide-container");
+    var progressEl = document.querySelector(".slide-progress");
+    var debugEl = document.querySelector(".debug");
+
+    var params = new URLSearchParams(window.location.search);
+    var statePath = params.get("statePath") || "./slides.json";
+    var pollInterval = Number(params.get("pollInterval") || "2000");
+    var showDebug = params.get("debug") === "1";
+    var showMeta = params.get("showMeta") === "1";
+    var supportsChannel = typeof BroadcastChannel !== "undefined";
+    var stateMode = (params.get("mode") || (supportsChannel ? "channel" : "json")).toLowerCase();
+
+    var lastUpdatedAt = "";
+    var currentIndex = -1;
+    var lastSlideId = null;
+    var lastTransitionType = null;
+    var loadedFonts = {};
+
+    function loadGoogleFont(fontFamily) {
+      var fontName = fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+
+      var googleFonts = {
+        'Montserrat': 'Montserrat:wght@400;600;700',
+        'Roboto': 'Roboto:wght@400;700',
+        'Open Sans': 'Open+Sans:wght@400;600;700',
+        'Lato': 'Lato:wght@400;700',
+        'Poppins': 'Poppins:wght@400;600;700',
+        'Raleway': 'Raleway:wght@400;600;700',
+        'Ubuntu': 'Ubuntu:wght@400;700',
+        'Nunito': 'Nunito:wght@400;700',
+        'Playfair Display': 'Playfair+Display:wght@400;700',
+        'Merriweather': 'Merriweather:wght@400;700',
+        'PT Sans': 'PT+Sans:wght@400;700',
+        'Oswald': 'Oswald:wght@400;700'
+      };
+
+      if (googleFonts[fontName] && !loadedFonts[fontName]) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=' + googleFonts[fontName] + '&display=swap';
+        document.head.appendChild(link);
+        loadedFonts[fontName] = true;
+      }
+    }
+
+    if (debugEl && (showDebug || showMeta)) {
+      debugEl.hidden = false;
+      debugEl.querySelector(".debug__state").textContent = "state: booting";
+    }
+
+    var channel = null;
+    if (supportsChannel) {
+      channel = new BroadcastChannel("text-slides");
+      channel.addEventListener("message", function (event) {
+        var payload = event && event.data;
+        if (!payload || typeof payload !== "object") return;
+        if (payload.type === "state") {
+          handleState(payload.payload);
         }
-        inCodeBlock = true;
-      }
-      continue;
+      });
+      channel.postMessage({ type: "request-state", source: "browser-overlay" });
+    } else if (stateMode === "channel") {
+      console.warn("BroadcastChannel is unavailable; falling back to JSON polling.");
+      stateMode = "json";
     }
 
-    if (inCodeBlock) {
-      codeFence += (codeFence ? "\n" : "") + line;
-      continue;
-    }
+    var lastETag = null;
+    var lastModified = null;
 
-    if (!line.trim()) {
-      if (paragraphLines.length > 0) {
-        paragraphBuffer = paragraphLines.join('\n');
-        flushParagraph(paragraphBuffer);
-        paragraphBuffer = "";
-        paragraphLines = [];
-      }
-      html += closeList(listState);
-      continue;
-    }
+    function fetchState() {
+      if (stateMode !== "json") return;
 
-    var headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
-    if (headingMatch) {
-      if (paragraphLines.length > 0) {
-        paragraphBuffer = paragraphLines.join('\n');
-        flushParagraph(paragraphBuffer);
-        paragraphBuffer = "";
-        paragraphLines = [];
-      }
-      html += closeList(listState);
-      var level = headingMatch[1].length;
-      html += "<h" + level + ">" + renderInline(escapeHtml(headingMatch[2])) + "</h" + level + ">";
-      continue;
-    }
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", statePath + "?t=" + Date.now(), true);
 
-    var blockquoteMatch = line.match(/^>\s?(.*)$/);
-    if (blockquoteMatch) {
-      if (paragraphLines.length > 0) {
-        paragraphBuffer = paragraphLines.join('\n');
-        flushParagraph(paragraphBuffer);
-        paragraphBuffer = "";
-        paragraphLines = [];
-      }
-      html += closeList(listState);
-      html += "<blockquote>" + renderInline(escapeHtml(blockquoteMatch[1])) + "</blockquote>";
-      continue;
-    }
+      if (lastETag) xhr.setRequestHeader('If-None-Match', lastETag);
+      if (lastModified) xhr.setRequestHeader('If-Modified-Since', lastModified);
 
-    var unorderedMatch = line.match(/^[-*+]\s+(.*)$/);
-    if (unorderedMatch) {
-      if (paragraphLines.length > 0) {
-        paragraphBuffer = paragraphLines.join('\n');
-        flushParagraph(paragraphBuffer);
-        paragraphBuffer = "";
-        paragraphLines = [];
-      }
-      if (listState.type !== "ul") {
-        html += closeList(listState);
-        listState.type = "ul";
-        html += "<ul>";
-      }
-      html += "<li>" + renderInline(escapeHtml(unorderedMatch[1])) + "</li>";
-      continue;
-    }
+      xhr.onload = function () {
+        if (xhr.status === 304) return;
 
-    var orderedMatch = line.match(/^\d+\.\s+(.*)$/);
-    if (orderedMatch) {
-      if (paragraphLines.length > 0) {
-        paragraphBuffer = paragraphLines.join('\n');
-        flushParagraph(paragraphBuffer);
-        paragraphBuffer = "";
-        paragraphLines = [];
-      }
-      if (listState.type !== "ol") {
-        html += closeList(listState);
-        listState.type = "ol";
-        html += "<ol>";
-      }
-      html += "<li>" + renderInline(escapeHtml(orderedMatch[1])) + "</li>";
-      continue;
-    }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          lastETag = xhr.getResponseHeader('ETag');
+          lastModified = xhr.getResponseHeader('Last-Modified');
 
-    paragraphLines.push(line.trim());
-  }
+          try {
+            var data = JSON.parse(xhr.responseText);
+            handleState(data);
+          } catch (e) {
+            setState("error");
+            if (bodyEl) {
+              bodyEl.innerHTML = "<p>Unable to parse JSON.</p>";
+            }
+          }
+        } else {
+          setState("error");
+          if (bodyEl) {
+            bodyEl.innerHTML = "<p>Unable to load slides from JSON.</p>";
+          }
+        }
+      };
 
-  if (paragraphLines.length > 0) {
-    paragraphBuffer = paragraphLines.join('\n');
-    flushParagraph(paragraphBuffer);
-  }
-
-  html += closeList(listState);
-
-  if (inCodeBlock) {
-    html += "<pre><code>" + escapeHtml(codeFence) + "</code></pre>";
-  }
-
-  return html || "<p></p>";
-}
-
-// Main overlay application
-var appEl = document.querySelector("#app");
-var bodyEl = document.querySelector(".slide-body");
-var containerEl = document.querySelector(".slide-container");
-var progressEl = document.querySelector(".slide-progress");
-var debugEl = document.querySelector(".debug");
-
-var params = new URLSearchParams(window.location.search);
-var statePath = params.get("statePath") || "./slides.json";
-var pollInterval = Number(params.get("pollInterval") || "2000");
-var showDebug = params.get("debug") === "1";
-var showMeta = params.get("showMeta") === "1";
-var supportsChannel = typeof BroadcastChannel !== "undefined";
-var stateMode = (params.get("mode") || (supportsChannel ? "channel" : "json")).toLowerCase();
-
-var lastUpdatedAt = "";
-var currentIndex = -1;
-var lastSlideId = null;
-var lastTransitionType = null;
-var loadedFonts = {};
-
-function loadGoogleFont(fontFamily) {
-  var fontName = fontFamily.split(',')[0].replace(/['"]/g, '').trim();
-  
-  var googleFonts = {
-    'Montserrat': 'Montserrat:wght@400;600;700',
-    'Roboto': 'Roboto:wght@400;700',
-    'Open Sans': 'Open+Sans:wght@400;600;700',
-    'Lato': 'Lato:wght@400;700',
-    'Poppins': 'Poppins:wght@400;600;700',
-    'Raleway': 'Raleway:wght@400;600;700',
-    'Ubuntu': 'Ubuntu:wght@400;700',
-    'Nunito': 'Nunito:wght@400;700',
-    'Playfair Display': 'Playfair+Display:wght@400;700',
-    'Merriweather': 'Merriweather:wght@400;700',
-    'PT Sans': 'PT+Sans:wght@400;700',
-    'Oswald': 'Oswald:wght@400;700'
-  };
-  
-  if (googleFonts[fontName] && !loadedFonts[fontName]) {
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=' + googleFonts[fontName] + '&display=swap';
-    document.head.appendChild(link);
-    loadedFonts[fontName] = true;
-  }
-}
-
-if (debugEl && (showDebug || showMeta)) {
-  debugEl.hidden = false;
-  debugEl.querySelector(".debug__state").textContent = "state: booting";
-}
-
-var channel = null;
-if (supportsChannel) {
-  channel = new BroadcastChannel("text-slides");
-  channel.addEventListener("message", function(event) {
-    var payload = event && event.data;
-    if (!payload || typeof payload !== "object") return;
-    if (payload.type === "state") {
-      handleState(payload.payload);
-    }
-  });
-  channel.postMessage({ type: "request-state", source: "browser-overlay" });
-} else if (stateMode === "channel") {
-  console.warn("BroadcastChannel is unavailable; falling back to JSON polling.");
-  stateMode = "json";
-}
-
-var lastETag = null;
-var lastModified = null;
-
-function fetchState() {
-  if (stateMode !== "json") return;
-  
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", statePath + "?t=" + Date.now(), true);
-  
-  if (lastETag) xhr.setRequestHeader('If-None-Match', lastETag);
-  if (lastModified) xhr.setRequestHeader('If-Modified-Since', lastModified);
-  
-  xhr.onload = function() {
-    if (xhr.status === 304) return;
-    
-    if (xhr.status >= 200 && xhr.status < 300) {
-      lastETag = xhr.getResponseHeader('ETag');
-      lastModified = xhr.getResponseHeader('Last-Modified');
-      
-      try {
-        var data = JSON.parse(xhr.responseText);
-        handleState(data);
-      } catch (e) {
+      xhr.onerror = function () {
         setState("error");
         if (bodyEl) {
-          bodyEl.innerHTML = "<p>Unable to parse JSON.</p>";
+          bodyEl.innerHTML = "<p>Network error loading slides.</p>";
         }
+      };
+
+      xhr.send();
+    }
+
+    function handleState(data) {
+      var slides = Array.isArray(data && data.slides) ? data.slides : [];
+      if (!slides.length) {
+        setState("empty");
+        if (bodyEl) {
+          bodyEl.innerHTML = "<p>Waiting for the dock to publish…</p>";
+        }
+        resetProgress();
+        return;
       }
-    } else {
-      setState("error");
-      if (bodyEl) {
-        bodyEl.innerHTML = "<p>Unable to load slides from JSON.</p>";
+
+      var index = data.activeSlideIndex != null ? data.activeSlideIndex : 0;
+      index = Math.min(Math.max(index, 0), slides.length - 1);
+
+      if (data.updatedAt === lastUpdatedAt && index === currentIndex) {
+        return;
+      }
+
+      var settings = data.settings || {};
+      var currentTransitionType = settings.transitionType || "crossfade";
+
+      var slide = slides[index];
+      var currentSlideId = slide ? slide.id : null;
+
+      var shouldAnimate = currentSlideId !== lastSlideId || (lastTransitionType !== null && currentTransitionType !== lastTransitionType);
+
+      lastUpdatedAt = data.updatedAt;
+      currentIndex = index;
+      lastSlideId = currentSlideId;
+      lastTransitionType = currentTransitionType;
+
+      setState("ready");
+      applyTypography(slide, settings);
+      swapContent(slide, settings, shouldAnimate);
+      updateProgress(slide.durationMs || (data.playlist && data.playlist.autoAdvanceMs) || 0);
+
+      if (debugEl && (showDebug || showMeta)) {
+        debugEl.querySelector(".debug__state").textContent = "state: ready (#" + (index + 1) + "/" + slides.length + ")";
       }
     }
-  };
-  
-  xhr.onerror = function() {
-    setState("error");
-    if (bodyEl) {
-      bodyEl.innerHTML = "<p>Network error loading slides.</p>";
+
+    function applyTypography(slide, settings) {
+      if (!bodyEl) return;
+      var fontFamily = slide.fontFamily || settings.defaultFontFamily || "Inter, 'Segoe UI', sans-serif";
+      var fontSizePx = slide.fontSizePx || settings.defaultFontSizePx || 36;
+      var textAlign = slide.textAlign || settings.textAlign || "center";
+      var lineHeight = slide.lineHeight || settings.lineHeight || 1.2;
+      var verticalAlign = slide.verticalAlign || settings.verticalAlign || "center";
+
+      var textColor = settings.textColor || "#ffffff";
+      var textOpacity = (settings.textOpacity != null ? settings.textOpacity : 100) / 100;
+      var shadowIntensity = settings.shadowIntensity != null ? settings.shadowIntensity : 0;
+      var strokeIntensity = settings.strokeIntensity != null ? settings.strokeIntensity : 0;
+
+      loadGoogleFont(fontFamily);
+
+      bodyEl.style.fontFamily = fontFamily;
+      bodyEl.style.textAlign = textAlign;
+      bodyEl.style.lineHeight = lineHeight;
+
+      bodyEl.style.color = textColor;
+      bodyEl.style.opacity = textOpacity;
+
+      if (shadowIntensity > 0) {
+        var blur = shadowIntensity * 0.5;
+        var offset = shadowIntensity * 0.2;
+
+        var shadowColor = "rgba(0, 0, 0, 1)";
+
+        if (shadowIntensity > 40) {
+          bodyEl.style.textShadow = offset + "px " + offset + "px " + blur + "px " + shadowColor + ", -" + (offset / 2) + "px -" + (offset / 2) + "px " + blur + "px " + shadowColor;
+        } else {
+          bodyEl.style.textShadow = offset + "px " + offset + "px " + blur + "px " + shadowColor;
+        }
+      } else {
+        bodyEl.style.textShadow = "none";
+      }
+
+      if (strokeIntensity > 0) {
+        var width = strokeIntensity * 2.0;
+        bodyEl.style.webkitTextStroke = width + "px black";
+        bodyEl.style.paintOrder = "stroke fill";
+      } else {
+        bodyEl.style.webkitTextStroke = "0";
+        bodyEl.style.paintOrder = "normal";
+      }
+
+      document.documentElement.style.setProperty("--font-size-target", fontSizePx);
+
+      if (containerEl) {
+        containerEl.style.justifyContent = verticalAlign;
+        containerEl.style.alignItems = textAlign === "left" ? "flex-start" :
+          textAlign === "right" ? "flex-end" : "center";
+      }
     }
-  };
-  
-  xhr.send();
-}
 
-function handleState(data) {
-  var slides = Array.isArray(data && data.slides) ? data.slides : [];
-  if (!slides.length) {
-    setState("empty");
-    if (bodyEl) {
-      bodyEl.innerHTML = "<p>Waiting for the dock to publish…</p>";
+    function swapContent(slide, settings, shouldAnimate) {
+      if (!bodyEl) return;
+      var markdown = slide.raw || slide.body || "";
+      var transitionType = shouldAnimate ? (settings && settings.transitionType || "crossfade") : "none";
+      var duration = settings && settings.transitionDuration || 200;
+
+      document.documentElement.style.setProperty("--transition-duration", duration + "ms");
+
+      var cleanupClasses = function () {
+        bodyEl.className = "slide-body";
+        bodyEl.style.willChange = "auto";
+      };
+
+      // Helper to sync styles to ghost
+      var copyStylesToGhost = function (ghost) {
+        ghost.className = bodyEl.className + " slide-ghost";
+        ghost.style.fontFamily = bodyEl.style.fontFamily;
+        ghost.style.textAlign = bodyEl.style.textAlign;
+        ghost.style.lineHeight = bodyEl.style.lineHeight;
+        ghost.style.color = bodyEl.style.color;
+        ghost.style.opacity = bodyEl.style.opacity;
+        ghost.style.textShadow = bodyEl.style.textShadow;
+        ghost.style.webkitTextStroke = bodyEl.style.webkitTextStroke;
+      };
+
+      if (transitionType === "none") {
+        cleanupClasses();
+        bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
+        return;
+      }
+
+      if (transitionType === "fade") {
+        // Sequential Fade (Out -> Wait -> In)
+        cleanupClasses();
+        bodyEl.classList.add("transition-out");
+        setTimeout(function () {
+          bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
+          bodyEl.classList.remove("transition-out");
+          bodyEl.classList.add("transition-in");
+          setTimeout(cleanupClasses, duration);
+        }, duration);
+        return;
+      }
+
+      // Parallel Transitions (Double Buffer) -> Crossfade, Slide, Push, Zoom
+      var rect = bodyEl.getBoundingClientRect();
+      var ghost = bodyEl.cloneNode(true);
+      copyStylesToGhost(ghost);
+
+      // Position ghost strictly where the text currently is
+      ghost.style.position = "fixed";
+      ghost.style.left = rect.left + "px";
+      ghost.style.top = rect.top + "px";
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      ghost.style.margin = "0";
+
+      // Determine animation classes
+      var outClass, inClass;
+      if (transitionType === "crossfade") {
+        outClass = "transition-out";
+        inClass = "transition-in";
+      } else {
+        outClass = "transition-" + transitionType + "-out";
+        inClass = "transition-" + transitionType + "-in";
+      }
+
+      // Prepare ghost (animate out)
+      ghost.classList.add(outClass);
+
+      // Insert ghost to document body
+      document.body.appendChild(ghost);
+
+      // Update real body immediately (animate in)
+      cleanupClasses();
+      bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
+      bodyEl.classList.add(inClass);
+
+      // Cleanup
+      setTimeout(function () {
+        if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+        cleanupClasses();
+      }, duration);
     }
-    resetProgress();
-    return;
-  }
 
-  var index = data.activeSlideIndex != null ? data.activeSlideIndex : 0;
-  index = Math.min(Math.max(index, 0), slides.length - 1);
-  
-  if (data.updatedAt === lastUpdatedAt && index === currentIndex) {
-    return;
-  }
+    function updateProgress(durationMs) {
+      if (!progressEl) return;
+      if (!durationMs) {
+        resetProgress();
+        return;
+      }
+      progressEl.hidden = false;
+      progressEl.style.transition = "none";
+      progressEl.style.width = "0%";
 
-  var settings = data.settings || {};
-  var currentTransitionType = settings.transitionType || "crossfade";
-
-  var slide = slides[index];
-  var currentSlideId = slide ? slide.id : null;
-  
-  var shouldAnimate = currentSlideId !== lastSlideId || (lastTransitionType !== null && currentTransitionType !== lastTransitionType);
-
-  lastUpdatedAt = data.updatedAt;
-  currentIndex = index;
-  lastSlideId = currentSlideId;
-  lastTransitionType = currentTransitionType;
-
-  setState("ready");
-  applyTypography(slide, settings);
-  swapContent(slide, settings, shouldAnimate);
-  updateProgress(slide.durationMs || (data.playlist && data.playlist.autoAdvanceMs) || 0);
-
-  if (debugEl && (showDebug || showMeta)) {
-    debugEl.querySelector(".debug__state").textContent = "state: ready (#" + (index + 1) + "/" + slides.length + ")";
-  }
-}
-
-function applyTypography(slide, settings) {
-  if (!bodyEl) return;
-  var fontFamily = slide.fontFamily || settings.defaultFontFamily || "Inter, 'Segoe UI', sans-serif";
-  var fontSizePx = slide.fontSizePx || settings.defaultFontSizePx || 36;
-  var textAlign = slide.textAlign || settings.textAlign || "center";
-  var lineHeight = slide.lineHeight || settings.lineHeight || 1.2;
-  var verticalAlign = slide.verticalAlign || settings.verticalAlign || "center";
-
-  var textColor = settings.textColor || "#ffffff";
-  var textOpacity = (settings.textOpacity != null ? settings.textOpacity : 100) / 100;
-  var shadowIntensity = settings.shadowIntensity != null ? settings.shadowIntensity : 0;
-  var strokeIntensity = settings.strokeIntensity != null ? settings.strokeIntensity : 0;
-
-  loadGoogleFont(fontFamily);
-
-  bodyEl.style.fontFamily = fontFamily;
-  bodyEl.style.textAlign = textAlign;
-  bodyEl.style.lineHeight = lineHeight;
-  
-  bodyEl.style.color = textColor;
-  bodyEl.style.opacity = textOpacity;
-
-  if (shadowIntensity > 0) {
-    var blur = shadowIntensity * 0.5;
-    var offset = shadowIntensity * 0.2;
-    
-    var shadowColor = "rgba(0, 0, 0, 1)";
-    
-    if (shadowIntensity > 40) {
-      bodyEl.style.textShadow = offset + "px " + offset + "px " + blur + "px " + shadowColor + ", -" + (offset/2) + "px -" + (offset/2) + "px " + blur + "px " + shadowColor;
-    } else {
-      bodyEl.style.textShadow = offset + "px " + offset + "px " + blur + "px " + shadowColor;
+      setTimeout(function () {
+        progressEl.style.transition = "width " + durationMs + "ms linear";
+        progressEl.style.width = "100%";
+      }, 10);
     }
-  } else {
-    bodyEl.style.textShadow = "none";
-  }
 
-  if (strokeIntensity > 0) {
-    var width = strokeIntensity * 2.0;
-    bodyEl.style.webkitTextStroke = width + "px black";
-    bodyEl.style.paintOrder = "stroke fill";
-  } else {
-    bodyEl.style.webkitTextStroke = "0";
-    bodyEl.style.paintOrder = "normal";
-  }
+    function resetProgress() {
+      if (!progressEl) return;
+      progressEl.hidden = true;
+      progressEl.style.transition = "none";
+      progressEl.style.width = "0%";
+    }
 
-  document.documentElement.style.setProperty("--font-size-target", fontSizePx);
-  
-  if (containerEl) {
-    containerEl.style.justifyContent = verticalAlign;
-    containerEl.style.alignItems = textAlign === "left" ? "flex-start" : 
-                                    textAlign === "right" ? "flex-end" : "center";
-  }
-}
+    function setState(value) {
+      if (appEl) {
+        appEl.dataset.state = value;
+      }
+    }
 
-function swapContent(slide, settings, shouldAnimate) {
-  if (!bodyEl) return;
-  var markdown = slide.raw || slide.body || "";
-  var transitionType = shouldAnimate ? (settings && settings.transitionType || "crossfade") : "none";
-  var duration = settings && settings.transitionDuration || 200;
-  
-  document.documentElement.style.setProperty("--transition-duration", duration + "ms");
-  
-  var cleanupClasses = function() {
-    bodyEl.className = "slide-body";
-    bodyEl.style.willChange = "auto";
-  };
-  
-  cleanupClasses();
-  
-  if (transitionType === "none") {
-    bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
-    return;
-  }
-  
-  if (transitionType === "crossfade") {
-    bodyEl.classList.add("transition-out");
-    setTimeout(function() {
-      bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
-      bodyEl.classList.remove("transition-out");
-      bodyEl.classList.add("transition-in");
-      setTimeout(cleanupClasses, duration);
-    }, duration / 2);
-  } else if (transitionType === "fade") {
-    bodyEl.classList.add("transition-out");
-    setTimeout(function() {
-      bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
-      bodyEl.classList.remove("transition-out");
-      bodyEl.classList.add("transition-in");
-      setTimeout(cleanupClasses, duration);
-    }, duration);
-  } else {
-    bodyEl.classList.add("transition-" + transitionType + "-out");
-    setTimeout(function() {
-      bodyEl.innerHTML = markdown ? markdownToHtml(markdown) : "<p>(empty slide)</p>";
-      bodyEl.classList.remove("transition-" + transitionType + "-out");
-      bodyEl.classList.add("transition-" + transitionType + "-in");
-      setTimeout(cleanupClasses, duration);
-    }, duration);
-  }
-}
+    setState("loading");
+    if (stateMode === "json") {
+      fetchState();
+      setInterval(fetchState, pollInterval);
+    }
+  </script>
+</body>
 
-function updateProgress(durationMs) {
-  if (!progressEl) return;
-  if (!durationMs) {
-    resetProgress();
-    return;
-  }
-  progressEl.hidden = false;
-  progressEl.style.transition = "none";
-  progressEl.style.width = "0%";
-  
-  setTimeout(function() {
-    progressEl.style.transition = "width " + durationMs + "ms linear";
-    progressEl.style.width = "100%";
-  }, 10);
-}
-
-function resetProgress() {
-  if (!progressEl) return;
-  progressEl.hidden = true;
-  progressEl.style.transition = "none";
-  progressEl.style.width = "0%";
-}
-
-function setState(value) {
-  if (appEl) {
-    appEl.dataset.state = value;
-  }
-}
-
-setState("loading");
-if (stateMode === "json") {
-  fetchState();
-  setInterval(fetchState, pollInterval);
-}
-    </script>
-  </body>
 </html>
