@@ -1473,8 +1473,61 @@
 
     var STATE_STORAGE_KEY = "htmlTextSlideshow.state";
     var DELIMITER = "\n\n---\n\n";
+    var LUA_POLL_INTERVAL_MS = 250;
 
     var clone = function (value) { return JSON.parse(JSON.stringify(value)); };
+
+    function canUseLocalStorage() {
+      try {
+        var probeKey = STATE_STORAGE_KEY + ".probe";
+        localStorage.setItem(probeKey, "1");
+        localStorage.removeItem(probeKey);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function mergeStateWithDefaults(parsed) {
+      var merged = clone(DEFAULT_STATE);
+      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.slides)) {
+        return merged;
+      }
+
+      for (var key in parsed) {
+        if (parsed.hasOwnProperty(key) && key !== "settings" && key !== "playlist") {
+          merged[key] = parsed[key];
+        }
+      }
+
+      if (parsed.settings && typeof parsed.settings === "object") {
+        for (var settingsKey in parsed.settings) {
+          if (parsed.settings.hasOwnProperty(settingsKey)) {
+            merged.settings[settingsKey] = parsed.settings[settingsKey];
+          }
+        }
+      }
+
+      if (parsed.playlist && typeof parsed.playlist === "object") {
+        for (var playlistKey in parsed.playlist) {
+          if (parsed.playlist.hasOwnProperty(playlistKey)) {
+            merged.playlist[playlistKey] = parsed.playlist[playlistKey];
+          }
+        }
+      }
+
+      if (!Array.isArray(merged.slides)) {
+        merged.slides = clone(DEFAULT_STATE.slides);
+      }
+
+      return merged;
+    }
+
+    var storageAvailable = canUseLocalStorage();
+    var supportsChannel = typeof BroadcastChannel !== "undefined";
+    var channel = null;
+    var warnedAboutStorage = false;
+    var warnedAboutChannel = false;
 
     function debounce(func, wait) {
       var timeout;
@@ -1569,38 +1622,85 @@
     var state = loadStateFromStorage();
     var luaSeq = 0;
 
-    var channel = new BroadcastChannel("text-slides");
-    channel.addEventListener("message", function (event) {
-      var payload = event && event.data;
-      if (!payload || typeof payload !== "object") return;
-      if (payload.type === "request-state") {
-        channel.postMessage({ type: "state", source: "dock-ui", payload: state });
-        appendStatusLog("Shared current state with overlay.");
+    function safeGetStoredState() {
+      if (!storageAvailable) return null;
+      try {
+        return localStorage.getItem(STATE_STORAGE_KEY);
+      } catch (e) {
+        storageAvailable = false;
+        return null;
       }
-    });
+    }
+
+    function safeSetStoredState(value) {
+      if (!storageAvailable) return false;
+      try {
+        localStorage.setItem(STATE_STORAGE_KEY, value);
+        return true;
+      } catch (e) {
+        storageAvailable = false;
+        return false;
+      }
+    }
+
+    function teardownChannel() {
+      if (!channel) return;
+      try {
+        channel.close();
+      } catch (e) {
+        // Ignore channel teardown issues in embedded browsers.
+      }
+      channel = null;
+    }
+
+    function warnChannelFallback() {
+      if (warnedAboutChannel) return;
+      warnedAboutChannel = true;
+      appendStatusLog("Live sync channel unavailable. Falling back to local storage sync.");
+    }
+
+    function setupChannel() {
+      if (!supportsChannel || channel) return;
+      try {
+        channel = new BroadcastChannel("text-slides");
+        channel.addEventListener("message", function (event) {
+          var payload = event && event.data;
+          if (!payload || typeof payload !== "object") return;
+          if (payload.type === "request-state") {
+            publishState();
+            appendStatusLog("Shared current state with overlay.");
+          }
+        });
+        if (typeof channel.addEventListener === "function") {
+          channel.addEventListener("messageerror", function () {
+            teardownChannel();
+            warnChannelFallback();
+          });
+        }
+      } catch (e) {
+        teardownChannel();
+        warnChannelFallback();
+      }
+    }
+
+    function publishState() {
+      if (!channel) return false;
+      try {
+        channel.postMessage({ type: "state", source: "dock-ui", payload: state });
+        return true;
+      } catch (e) {
+        teardownChannel();
+        warnChannelFallback();
+        return false;
+      }
+    }
 
     function loadStateFromStorage() {
       try {
-        var raw = localStorage.getItem(STATE_STORAGE_KEY);
+        var raw = safeGetStoredState();
         if (!raw) return clone(DEFAULT_STATE);
         var parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed.slides)) {
-          return clone(DEFAULT_STATE);
-        }
-        var merged = clone(DEFAULT_STATE);
-        for (var key in parsed) {
-          if (parsed.hasOwnProperty(key)) {
-            merged[key] = parsed[key];
-          }
-        }
-        if (parsed.settings) {
-          for (var skey in parsed.settings) {
-            if (parsed.settings.hasOwnProperty(skey)) {
-              merged.settings[skey] = parsed.settings[skey];
-            }
-          }
-        }
-        return merged;
+        return mergeStateWithDefaults(parsed);
       } catch (e) {
         return clone(DEFAULT_STATE);
       }
@@ -1614,9 +1714,21 @@
         source: "control-panel",
         notes: reason,
       };
-      localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
-      channel.postMessage({ type: "state", source: "dock-ui", payload: state });
-      renderStatus("Auto-sync ready", "success");
+      var savedToStorage = safeSetStoredState(JSON.stringify(state));
+      var publishedToChannel = publishState();
+
+      if (!savedToStorage) {
+        renderStatus("Storage unavailable", "warning");
+        if (!warnedAboutStorage) {
+          warnedAboutStorage = true;
+          appendStatusLog("Persistent storage is unavailable in this OBS browser context.");
+        }
+      } else if (publishedToChannel) {
+        renderStatus("Auto-sync ready", "success");
+      } else {
+        renderStatus("Storage sync fallback", "neutral");
+      }
+
       appendStatusLog("Saved " + state.slides.length + " slides (" + reason + ").");
     }
 
@@ -1635,7 +1747,6 @@
       if (shadowIntensityInput) shadowIntensityInput.value = String(state.settings.shadowIntensity != null ? state.settings.shadowIntensity : 0);
       if (strokeIntensityInput) strokeIntensityInput.value = String(state.settings.strokeIntensity != null ? state.settings.strokeIntensity : 0);
       if (transitionTypeSelect) transitionTypeSelect.value = state.settings.transitionType || "crossfade";
-      if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
       if (transitionDurationInput) transitionDurationInput.value = String(state.settings.transitionDuration || 200);
       if (showProgressBarInput) showProgressBarInput.checked = state.settings.showProgressBar !== false;
 
@@ -2123,12 +2234,28 @@
     }
 
     var pendingScript = null;
+    var pendingScriptTimer = null;
+
+    function cleanupPendingScript() {
+      if (pendingScriptTimer) {
+        clearTimeout(pendingScriptTimer);
+        pendingScriptTimer = null;
+      }
+      if (pendingScript) {
+        pendingScript.remove();
+        pendingScript = null;
+      }
+    }
 
     function pollLuaCommands() {
       if (pendingScript) return;
 
       pendingScript = document.createElement("script");
       pendingScript.src = "./hotkeys.js?t=" + Date.now();
+      pendingScript.async = true;
+      pendingScriptTimer = setTimeout(function () {
+        cleanupPendingScript();
+      }, LUA_POLL_INTERVAL_MS * 3);
       pendingScript.onload = function () {
         var payload = window.__textSlidesHotkey;
         if (payload && typeof payload.seq === "number" && payload.seq > luaSeq) {
@@ -2143,16 +2270,10 @@
             setActiveSlide(payload.command, "lua-jump");
           }
         }
-        if (pendingScript) {
-          pendingScript.remove();
-          pendingScript = null;
-        }
+        cleanupPendingScript();
       };
       pendingScript.onerror = function () {
-        if (pendingScript) {
-          pendingScript.remove();
-          pendingScript = null;
-        }
+        cleanupPendingScript();
       };
       document.body.appendChild(pendingScript);
     }
@@ -2181,9 +2302,7 @@
               event.target.value = ""; // Reset
               return;
             }
-            state = importedState;
-            // Ensure defaults if missing
-            if (!state.settings) state.settings = clone(DEFAULT_STATE.settings);
+            state = mergeStateWithDefaults(importedState);
             // Force update UI
             applyStateToUi();
             persistState("restore-backup");
@@ -2277,7 +2396,6 @@
       if (shadowIntensityInput) shadowIntensityInput.addEventListener("input", function () { debouncedUpdateSettings("shadow intensity"); });
       if (strokeIntensityInput) strokeIntensityInput.addEventListener("input", function () { debouncedUpdateSettings("stroke intensity"); });
       if (transitionTypeSelect) transitionTypeSelect.addEventListener("change", function () { updateSettings("transition type"); });
-      if (transitionTypeSelect) transitionTypeSelect.addEventListener("change", function () { updateSettings("transition type"); });
       if (transitionDurationInput) transitionDurationInput.addEventListener("input", function () { debouncedUpdateSettings("transition duration"); });
 
       if (autoplayToggleBtn) autoplayToggleBtn.addEventListener("click", toggleAutoplay);
@@ -2288,10 +2406,17 @@
       });
 
       applyStateToUi();
+      setupChannel();
       renderStatus("Ready", "success");
+      if (!storageAvailable) {
+        renderStatus("Storage unavailable", "warning");
+      } else if (!channel) {
+        renderStatus("Storage sync fallback", "neutral");
+      }
       appendStatusLog("Dock ready. Add slides using the editor.");
-      channel.postMessage({ type: "state", source: "dock-ui", payload: state });
-      setInterval(pollLuaCommands, 1000);
+      publishState();
+      setInterval(pollLuaCommands, LUA_POLL_INTERVAL_MS);
+      window.addEventListener("beforeunload", teardownChannel);
     }
 
     init();
