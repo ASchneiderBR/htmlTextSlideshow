@@ -25,6 +25,24 @@ type PendingMap = Record<string, number>;
 
 type StatusTone = "success" | "warning" | "neutral";
 
+type AlignmentOption = {
+  label: string;
+  horizontal: SlideshowState["settings"]["textAlign"];
+  vertical: SlideshowState["settings"]["verticalAlign"];
+};
+
+const ALIGNMENT_OPTIONS: AlignmentOption[] = [
+  { label: "Top left", horizontal: "left", vertical: "flex-start" },
+  { label: "Top center", horizontal: "center", vertical: "flex-start" },
+  { label: "Top right", horizontal: "right", vertical: "flex-start" },
+  { label: "Middle left", horizontal: "left", vertical: "center" },
+  { label: "Middle center", horizontal: "center", vertical: "center" },
+  { label: "Middle right", horizontal: "right", vertical: "center" },
+  { label: "Bottom left", horizontal: "left", vertical: "flex-end" },
+  { label: "Bottom center", horizontal: "center", vertical: "flex-end" },
+  { label: "Bottom right", horizontal: "right", vertical: "flex-end" }
+];
+
 function formatLog(message: string) {
   return `[${new Date().toLocaleTimeString()}] ${message}`;
 }
@@ -61,6 +79,7 @@ export default function App() {
   const [statusTone, setStatusTone] = useState<StatusTone>("success");
   const [statusText, setStatusText] = useState("Ready");
   const [logsOpen, setLogsOpen] = useState(false);
+  const [alignmentOpen, setAlignmentOpen] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [draggedSlideId, setDraggedSlideId] = useState<string | null>(null);
   const [pendingAnimations, setPendingAnimations] = useState<PendingMap>({});
@@ -73,6 +92,7 @@ export default function App() {
   const pendingScriptTimeoutRef = useRef<number | null>(null);
   const lastAnimationFinishRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const alignmentRef = useRef<HTMLDivElement | null>(null);
 
   const deferredSlides = useDeferredValue(state.slides);
 
@@ -80,6 +100,35 @@ export default function App() {
     stateRef.current = state;
     document.documentElement.dataset.theme = state.settings.theme;
   }, [state]);
+
+  useEffect(() => {
+    if (!alignmentOpen) {
+      return;
+    }
+
+    function handleClickOutside(event: MouseEvent) {
+      if (!alignmentRef.current) {
+        return;
+      }
+      if (!alignmentRef.current.contains(event.target as Node)) {
+        setAlignmentOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setAlignmentOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [alignmentOpen]);
 
   function appendLog(message: string) {
     setStatusLog((previous) => [formatLog(message), ...previous].slice(0, MAX_LOG_ENTRIES));
@@ -382,6 +431,19 @@ export default function App() {
     });
   }
 
+  function applyAlignment(horizontal: SlideshowState["settings"]["textAlign"], vertical: SlideshowState["settings"]["verticalAlign"]) {
+    commitState("alignment-grid", (draftState) => {
+      draftState.settings.textAlign = horizontal;
+      draftState.settings.verticalAlign = vertical;
+      return draftState;
+    });
+    setAlignmentOpen(false);
+  }
+
+  const currentAlignmentLabel =
+    ALIGNMENT_OPTIONS.find((option) => option.horizontal === state.settings.textAlign && option.vertical === state.settings.verticalAlign)?.label ||
+    "Middle center";
+
   return (
     <div className="app-shell">
       <header className="topbar glass">
@@ -402,14 +464,13 @@ export default function App() {
       </header>
 
       <main className="workspace">
-        <aside className="sidebar glass">
-          <section>
+        <aside className="sidebar-stack">
+          <section className="sidebar-card glass">
             <div className="section-heading">
-              <p className="eyebrow">Look</p>
               <h2>Typography</h2>
             </div>
             <div className="control-grid">
-              <label>
+              <label className="full-row">
                 <span>Font family</span>
                 <select value={state.settings.defaultFontFamily} onChange={(event) => updateSetting("defaultFontFamily", event.target.value, "font-family")}>
                   {FONT_OPTIONS.map((option) => (
@@ -421,24 +482,47 @@ export default function App() {
                 <span>Font size</span>
                 <input type="number" min={18} max={120} value={state.settings.defaultFontSizePx} onChange={(event) => updateSetting("defaultFontSizePx", Number(event.target.value), "font-size")} />
               </label>
+              <div className="alignment-control" ref={alignmentRef}>
+                <span>Alignment</span>
+                <button
+                  type="button"
+                  className="alignment-trigger"
+                  onClick={() => setAlignmentOpen((current) => !current)}
+                  aria-expanded={alignmentOpen}
+                  aria-haspopup="dialog"
+                >
+                  <span>{currentAlignmentLabel}</span>
+                  <span className="alignment-trigger__preview" aria-hidden="true">
+                    {ALIGNMENT_OPTIONS.map((option) => {
+                      const active = option.horizontal === state.settings.textAlign && option.vertical === state.settings.verticalAlign;
+                      return <span key={option.label} className={`alignment-dot ${active ? "is-active" : ""}`} />;
+                    })}
+                  </span>
+                </button>
+                {alignmentOpen ? (
+                  <div className="alignment-popover" role="dialog" aria-label="Alignment picker">
+                    <div className="alignment-grid">
+                      {ALIGNMENT_OPTIONS.map((option) => {
+                        const active = option.horizontal === state.settings.textAlign && option.vertical === state.settings.verticalAlign;
+                        return (
+                          <button
+                            key={option.label}
+                            type="button"
+                            className={`alignment-option ${active ? "is-active" : ""}`}
+                            aria-label={option.label}
+                            title={option.label}
+                            onClick={() => applyAlignment(option.horizontal, option.vertical)}
+                          >
+                            <span className="alignment-option__dot" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
               <label>
-                <span>Horizontal align</span>
-                <select value={state.settings.textAlign} onChange={(event) => updateSetting("textAlign", event.target.value as SlideshowState["settings"]["textAlign"], "text-align")}>
-                  <option value="left">Left</option>
-                  <option value="center">Center</option>
-                  <option value="right">Right</option>
-                </select>
-              </label>
-              <label>
-                <span>Vertical align</span>
-                <select value={state.settings.verticalAlign} onChange={(event) => updateSetting("verticalAlign", event.target.value as SlideshowState["settings"]["verticalAlign"], "vertical-align")}>
-                  <option value="flex-start">Top</option>
-                  <option value="center">Middle</option>
-                  <option value="flex-end">Bottom</option>
-                </select>
-              </label>
-              <label>
-                <span>Text color</span>
+                <span>Color</span>
                 <input type="color" value={state.settings.textColor} onChange={(event) => updateSetting("textColor", event.target.value, "text-color")} />
               </label>
               <label>
@@ -454,24 +538,11 @@ export default function App() {
                 <span>Stroke</span>
                 <input type="number" min={0} max={10} value={state.settings.strokeIntensity} onChange={(event) => updateSetting("strokeIntensity", Number(event.target.value), "stroke-intensity")} />
               </label>
-              <label>
-                <span>Transition</span>
-                <select value={state.settings.transitionType} onChange={(event) => updateSetting("transitionType", event.target.value as SlideshowState["settings"]["transitionType"], "transition-type")}>
-                  {TRANSITION_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Duration</span>
-                <input type="number" min={0} max={3000} step={50} value={state.settings.transitionDuration} onChange={(event) => updateSetting("transitionDuration", Number(event.target.value), "transition-duration")} />
-              </label>
             </div>
           </section>
 
-          <section>
+          <section className="sidebar-card glass">
             <div className="section-heading">
-              <p className="eyebrow">Playback</p>
               <h2>Playback</h2>
             </div>
             <div className="control-grid">
@@ -482,7 +553,19 @@ export default function App() {
                   return draftState;
                 })} />
               </label>
-              <div className="action-cluster">
+              <label>
+                <span>Duration</span>
+                <input type="number" min={0} max={3000} step={50} value={state.settings.transitionDuration} onChange={(event) => updateSetting("transitionDuration", Number(event.target.value), "transition-duration")} />
+              </label>
+              <label className="full-row">
+                <span>Transition</span>
+                <select value={state.settings.transitionType} onChange={(event) => updateSetting("transitionType", event.target.value as SlideshowState["settings"]["transitionType"], "transition-type")}>
+                  {TRANSITION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="action-cluster full-row">
                 <button className="button button--primary" onClick={toggleAutoplay}>{state.playlist.isPlaying ? "Stop autoplay" : "Start autoplay"}</button>
                 <button className={`button ${state.playlist.loop ? "button--ghost-active" : "button--ghost"}`} onClick={toggleLoop}>{state.playlist.loop ? "Loop on" : "Loop off"}</button>
                 <button className={`button ${state.settings.showProgressBar ? "button--ghost-active" : "button--ghost"}`} onClick={() => updateSetting("showProgressBar", !state.settings.showProgressBar, "toggle-progress-bar")}>{state.settings.showProgressBar ? "Progress on" : "Progress off"}</button>
