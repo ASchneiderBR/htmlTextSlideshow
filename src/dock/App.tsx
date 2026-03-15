@@ -119,7 +119,7 @@ function SortableSlideCard({ slide, index, isActive, isPending, onShow, onDelete
         <button className="button button--small button--primary" onClick={onShow}>
           {isPending ? "Queued" : "Show"}
         </button>
-        <button className="button button--small button--ghost" onClick={onDelete}>Delete</button>
+        <button className="button button--small button--danger" onClick={onDelete}>Delete</button>
       </div>
     </article>
   );
@@ -128,6 +128,7 @@ function SortableSlideCard({ slide, index, isActive, isPending, onShow, onDelete
 export default function App() {
   const enableHotkeyPolling = !import.meta.env.DEV;
   const [state, setState] = useState<SlideshowState>(() => mergeStateWithDefaults(loadStoredState()));
+  const [isAdding, setIsAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [statusLog, setStatusLog] = useState<string[]>([formatLog("Dock initialized.")]);
   const [statusTone, setStatusTone] = useState<StatusTone>("success");
@@ -382,6 +383,7 @@ export default function App() {
     if (!parsedSlides.length) {
       return;
     }
+    setIsAdding(true);
     startTransition(() => {
       commitState("add-slides", (draftState) => {
         draftState.slides = [...draftState.slides, ...parsedSlides];
@@ -389,6 +391,7 @@ export default function App() {
       });
     });
     setDraft("");
+    setTimeout(() => setIsAdding(false), 300);
   }
 
   function handleDeleteSlide(slideId: string) {
@@ -533,9 +536,15 @@ export default function App() {
             <div className="control-grid">
               <label className="full-row">
                 <span>Font family</span>
-                <select value={state.settings.defaultFontFamily} onChange={(event) => updateSetting("defaultFontFamily", event.target.value, "font-family")}>
+                <select value={state.settings.defaultFontFamily} onChange={(event) => updateSetting("defaultFontFamily", event.target.value, "font-family")}> 
                   {FONT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option 
+                      key={option.value} 
+                      value={option.value} 
+                      style={{ fontFamily: option.value }}
+                    >
+                      {option.label}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -611,14 +620,20 @@ export default function App() {
             <div className="control-grid">
               <label>
                 <span>Autoplay interval</span>
-                <input type="number" min={500} max={60000} step={100} value={state.playlist.autoAdvanceMs} onChange={(event) => commitState("autoplay-interval", (draftState) => {
-                  draftState.playlist.autoAdvanceMs = Number(event.target.value);
-                  return draftState;
-                })} />
+                <div className="input-with-unit">
+                  <input type="number" min={500} max={60000} step={100} value={state.playlist.autoAdvanceMs} onChange={(event) => commitState("autoplay-interval", (draftState) => {
+                    draftState.playlist.autoAdvanceMs = Number(event.target.value);
+                    return draftState;
+                  })} />
+                  <span className="input-unit">ms</span>
+                </div>
               </label>
               <label>
-                <span>Duration</span>
-                <input type="number" min={0} max={3000} step={50} value={state.settings.transitionDuration} onChange={(event) => updateSetting("transitionDuration", Number(event.target.value), "transition-duration")} />
+                <span>Transition duration</span>
+                <div className="input-with-unit">
+                  <input type="number" min={0} max={3000} step={50} value={state.settings.transitionDuration} onChange={(event) => updateSetting("transitionDuration", Number(event.target.value), "transition-duration")} />
+                  <span className="input-unit">ms</span>
+                </div>
               </label>
               <label className="full-row">
                 <span>Transition</span>
@@ -629,9 +644,24 @@ export default function App() {
                 </select>
               </label>
               <div className="action-cluster full-row">
-                <button className="button button--primary" onClick={toggleAutoplay}>{state.playlist.isPlaying ? "Stop autoplay" : "Start autoplay"}</button>
-                <button className={`button ${state.playlist.loop ? "button--ghost-active" : "button--ghost"}`} onClick={toggleLoop}>{state.playlist.loop ? "Loop on" : "Loop off"}</button>
-                <button className={`button ${state.settings.showProgressBar ? "button--ghost-active" : "button--ghost"}`} onClick={() => updateSetting("showProgressBar", !state.settings.showProgressBar, "toggle-progress-bar")}>{state.settings.showProgressBar ? "Progress on" : "Progress off"}</button>
+                <button 
+                  className={`button ${state.playlist.isPlaying ? "button--primary" : "button--ghost"}`}
+                  onClick={toggleAutoplay}
+                >
+                  Autoplay
+                </button>
+                <button 
+                  className={`button ${state.playlist.loop ? "button--primary" : "button--ghost"}`}
+                  onClick={toggleLoop}
+                >
+                  Loop
+                </button>
+                <button 
+                  className={`button ${state.settings.showProgressBar ? "button--primary" : "button--ghost"}`}
+                  onClick={() => updateSetting("showProgressBar", !state.settings.showProgressBar, "toggle-progress-bar")}
+                >
+                  Progress bar
+                </button>
               </div>
             </div>
           </section>
@@ -643,7 +673,7 @@ export default function App() {
             <h2>Compose slides</h2>
           </div>
           <div className="toolbar-row">
-            <button className="button button--ghost" onClick={() => setDraft((current) => `${current}${current ? DEFAULT_DELIMITER : "---\n"}`)}>Insert delimiter</button>
+            <button className="button button--primary" onClick={() => setDraft((current) => `${current}${current ? DEFAULT_DELIMITER : "---\n"}`)}>Insert delimiter</button>
             <button className="button button--primary" onClick={handleAddSlides}>Add slides</button>
           </div>
           <textarea
@@ -675,7 +705,7 @@ export default function App() {
           </div>
           <div
             className={
-              `preview-list${state.isDragging ? " is-dragging" : ""}`
+              `preview-list${state.isDragging ? " is-dragging" : ""}${isAdding ? " is-dragging" : ""}`
             }
             role="list"
           >

@@ -313,6 +313,10 @@ textarea {
   color: var(--text);
 }
 
+select {
+  padding-right: 32px;
+}
+
 select option {
   background: color-mix(in srgb, var(--bg-panel) 96%, black);
   color: var(--text);
@@ -338,11 +342,49 @@ input[type="range"] {
 }
 
 .range-with-value strong {
+}
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-unit input[type="number"] {
+    /* Remove arrows for number inputs */
+    -webkit-appearance: textfield;
+  }
+
+  .input-with-unit input[type="number"]::-webkit-outer-spin-button,
+  .input-with-unit input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .input-with-unit input[type="number"] {
+  width: 100%;
+  padding-right: 32px;
+  appearance: textfield;
+  -webkit-appearance: textfield;
+}
+
+.input-with-unit input[type="number"]::-webkit-outer-spin-button,
+.input-with-unit input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-unit {
+  position: absolute;
+  right: 12px;
   font-size: 0.74rem;
-  color: var(--text);
-  min-width: 40px;
-  text-align: right;
-  line-height: 1;
+  color: var(--muted);
+  pointer-events: none;
+  background: transparent;
+}
+
+.input-with-unit input[type="number"] {
+  padding-right: 32px;
 }
 
 .color-control input[type="color"] {
@@ -353,6 +395,7 @@ input[type="range"] {
 .opacity-control .range-with-value input[type="range"] {
   margin: 0;
   align-self: center;
+  accent-color: var(--accent);
 }
 
 textarea {
