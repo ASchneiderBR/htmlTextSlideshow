@@ -10,6 +10,7 @@
 - Dev Lab split-screen page for dock/source testing with draggable resize support.
 - Built-in sample slideshow with 10 Markdown test slides covering headings, lists, quotes, links, tables, code blocks, and alignment cases.
 - Automatic release publishing for pushes to `main`, including generated ZIP artifacts.
+- Sortable playlist powered by `dnd-kit`, including drag handle and smoother drag/drop interactions.
 
 ### Changed
 - OBS now consumes `dist/Dock.html` and `dist/Source.html` instead of root HTML files.
@@ -18,6 +19,8 @@
 - Dock controls were simplified and compacted, including smaller transport buttons, a single-icon theme toggle, and a reduced status/log bar.
 - Playlist cards now prioritize slide number and rendered content, with slide actions moved below the preview.
 - Sidebar spacing and responsive behavior were refined to work better in single-column layouts.
+- Dock layout now uses separated parent containers for Typography, Playback, Author, Playlist, and Synced.
+- Typography/Playback controls were reorganized into paired rows (size+alignment, color+opacity, shadow+stroke) with transition controls moved to Playback.
 
 ### Fixed
 - Hotkey bridge now initializes in `dist/hotkeys.js`, matching the dock runtime path.
@@ -27,6 +30,7 @@
 - Source alignment now follows the Browser Source viewport more reliably while keeping the overlay fully transparent.
 - Development hotkey polling no longer spams missing `hotkeys.js` requests in Dev Lab.
 - Dock dropdowns, log drawer layout, and compact control sizing were cleaned up for dark/light theme consistency.
+- Drag interactions no longer trigger unwanted horizontal scrollbar overflow in the playlist area.
 
 ### Removed
 - Legacy root-level HTML runtime from the active distribution path.

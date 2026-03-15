@@ -1,4 +1,13 @@
 import { startTransition, useDeferredValue, useEffect, useRef, useState } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { restrictToFirstScrollableAncestor, restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy
+} from "@dnd-kit/sortable";
 import {
   DEFAULT_DELIMITER,
   FONT_OPTIONS,
@@ -71,6 +80,51 @@ function getThemeLabel(theme: ThemeName) {
   return theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
 }
 
+type SortableSlideCardProps = {
+  slide: Slide;
+  index: number;
+  isActive: boolean;
+  isPending: boolean;
+  onShow: () => void;
+  onDelete: () => void;
+};
+
+function SortableSlideCard({ slide, index, isActive, isPending, onShow, onDelete }: SortableSlideCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  };
+
+  return (
+    <article ref={setNodeRef} style={style} className={`preview-card ${isActive ? "is-active" : ""} ${isDragging ? "is-dragging" : ""}`}>
+      <header>
+        <div className="card-meta">
+          <p className="card-index">Slide {index + 1}</p>
+          <button
+            type="button"
+            className="sort-handle"
+            aria-label={`Drag slide ${index + 1}`}
+            title="Drag to reorder"
+            {...attributes}
+            {...listeners}
+          >
+            <span aria-hidden="true">⋮⋮</span>
+          </button>
+        </div>
+      </header>
+      <div className="preview-markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(slide.raw) }} />
+      <div className="card-actions">
+        <button className="button button--small button--primary" onClick={onShow}>
+          {isPending ? "Queued" : "Show"}
+        </button>
+        <button className="button button--small button--ghost" onClick={onDelete}>Delete</button>
+      </div>
+    </article>
+  );
+}
+
 export default function App() {
   const enableHotkeyPolling = !import.meta.env.DEV;
   const [state, setState] = useState<SlideshowState>(() => mergeStateWithDefaults(loadStoredState()));
@@ -81,7 +135,6 @@ export default function App() {
   const [logsOpen, setLogsOpen] = useState(false);
   const [alignmentOpen, setAlignmentOpen] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [draggedSlideId, setDraggedSlideId] = useState<string | null>(null);
   const [pendingAnimations, setPendingAnimations] = useState<PendingMap>({});
 
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -95,6 +148,10 @@ export default function App() {
   const alignmentRef = useRef<HTMLDivElement | null>(null);
 
   const deferredSlides = useDeferredValue(state.slides);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     stateRef.current = state;
@@ -382,8 +439,8 @@ export default function App() {
     reader.readAsText(file);
   }
 
-  function handleReorder(targetSlideId: string) {
-    if (!draggedSlideId || draggedSlideId === targetSlideId) {
+  function handleReorder(draggedSlideId: string, targetSlideId: string) {
+    if (!draggedSlideId || !targetSlideId || draggedSlideId === targetSlideId) {
       return;
     }
 
@@ -401,6 +458,10 @@ export default function App() {
       }
       return draftState;
     });
+  }
+
+  function handleSortEnd(activeId: string, overId: string) {
+    handleReorder(activeId, overId);
   }
 
   function setTheme(theme: ThemeName) {
@@ -521,14 +582,16 @@ export default function App() {
                   </div>
                 ) : null}
               </div>
-              <label>
+              <label className="color-control">
                 <span>Color</span>
                 <input type="color" value={state.settings.textColor} onChange={(event) => updateSetting("textColor", event.target.value, "text-color")} />
               </label>
-              <label>
+              <label className="opacity-control">
                 <span>Opacity</span>
-                <input type="range" min={0} max={100} value={state.settings.textOpacity} onChange={(event) => updateSetting("textOpacity", Number(event.target.value), "text-opacity")} />
-                <strong>{state.settings.textOpacity}%</strong>
+                <div className="range-with-value">
+                  <input type="range" min={0} max={100} value={state.settings.textOpacity} onChange={(event) => updateSetting("textOpacity", Number(event.target.value), "text-opacity")} />
+                  <strong>{state.settings.textOpacity}%</strong>
+                </div>
               </label>
               <label>
                 <span>Shadow</span>
@@ -610,38 +673,49 @@ export default function App() {
             <button className="button button--small button--ghost" onClick={handleRestart} disabled={state.slides.length === 0}>Restart</button>
             <button className="button button--small button--ghost" onClick={() => handleNextSlide("manual-next")} disabled={state.slides.length === 0}>Next</button>
           </div>
-          <div className="preview-list" role="list">
+          <div
+            className={
+              `preview-list${state.isDragging ? " is-dragging" : ""}`
+            }
+            role="list"
+          >
             {deferredSlides.length === 0 ? (
               <div className="empty-state">No slides yet. Add content from the editor.</div>
             ) : (
-              deferredSlides.map((slide, index) => {
-                const isActive = index === state.activeSlideIndex;
-                const isPending = pendingAnimations[slide.id] && pendingAnimations[slide.id] > Date.now();
-                return (
-                  <article
-                    key={slide.id}
-                    className={`preview-card ${isActive ? "is-active" : ""}`}
-                    draggable
-                    onDragStart={() => setDraggedSlideId(slide.id)}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => handleReorder(slide.id)}
-                    onDragEnd={() => setDraggedSlideId(null)}
-                  >
-                    <header>
-                      <div>
-                        <p className="card-index">Slide {index + 1}</p>
-                      </div>
-                    </header>
-                    <div className="preview-markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(slide.raw) }} />
-                    <div className="card-actions">
-                      <button className="button button--small button--primary" onClick={() => activateSlide(index, "manual-play")}>
-                        {isPending ? "Queued" : "Show"}
-                      </button>
-                      <button className="button button--small button--ghost" onClick={() => handleDeleteSlide(slide.id)}>Delete</button>
-                    </div>
-                  </article>
-                );
-              })
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                autoScroll={false}
+                modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor, restrictToParentElement]}
+                onDragStart={() => setState((prev) => ({ ...prev, isDragging: true }))}
+                onDragEnd={(event) => {
+                  setState((prev) => ({ ...prev, isDragging: true }));
+                  setTimeout(() => setState((prev) => ({ ...prev, isDragging: false })), 300);
+                  if (!event.over) {
+                    return;
+                  }
+                  handleSortEnd(String(event.active.id), String(event.over.id));
+                }}
+                onDragCancel={() => setState((prev) => ({ ...prev, isDragging: false }))}
+              >
+                <SortableContext items={deferredSlides.map((slide) => slide.id)} strategy={verticalListSortingStrategy}>
+                  {deferredSlides.map((slide, index) => {
+                    const isActive = index === state.activeSlideIndex;
+                    const isPending = pendingAnimations[slide.id] && pendingAnimations[slide.id] > Date.now();
+                    return (
+                      <SortableSlideCard
+                        key={slide.id}
+                        slide={slide}
+                        index={index}
+                        isActive={isActive}
+                        isPending={Boolean(isPending)}
+                        onShow={() => activateSlide(index, "manual-play")}
+                        onDelete={() => handleDeleteSlide(slide.id)}
+                      />
+                    );
+                  })}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </section>

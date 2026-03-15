@@ -155,6 +155,7 @@ button {
   min-height: 0;
   align-items: start;
   align-content: start;
+  overflow-x: clip;
 }
 
 .sidebar-stack,
@@ -177,6 +178,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-x: clip;
 }
 
 .section-heading {
@@ -327,6 +329,32 @@ input[type="range"] {
   width: 100%;
 }
 
+.range-with-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.range-with-value strong {
+  font-size: 0.74rem;
+  color: var(--text);
+  min-width: 40px;
+  text-align: right;
+  line-height: 1;
+}
+
+.color-control input[type="color"] {
+  height: 30px;
+  padding: 2px;
+}
+
+.opacity-control .range-with-value input[type="range"] {
+  margin: 0;
+  align-self: center;
+}
+
 textarea {
   min-height: 180px;
   resize: vertical;
@@ -413,11 +441,29 @@ textarea {
   font-size: 0.72rem;
 }
 
+
 .preview-list {
   display: grid;
   gap: 6px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding-right: 2px;
+  max-height: 100%;
+  height: auto;
+  position: relative;
+  flex: 1 1 auto;
+}
+
+.preview-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.preview-list.is-dragging {
+  overflow-y: hidden !important;
 }
 
 .preview-card {
@@ -427,7 +473,9 @@ textarea {
   padding: 8px;
   display: grid;
   gap: 6px;
-  animation: card-in 260ms ease;
+  animation: card-in 220ms ease;
+  transition: box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+  will-change: transform;
 }
 
 .preview-card.is-active {
@@ -442,6 +490,14 @@ textarea {
   align-items: flex-start;
 }
 
+.card-meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .card-index {
   margin: 0;
 }
@@ -449,6 +505,40 @@ textarea {
 .card-index {
   color: var(--muted);
   font-size: 0.68rem;
+}
+
+.sort-handle {
+  width: 24px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  color: var(--muted);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  cursor: grab;
+  line-height: 1;
+  font-size: 11px;
+}
+
+.sort-handle:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.sort-handle:active {
+  cursor: grabbing;
+}
+
+
+.preview-card.is-dragging {
+  opacity: 0.9;
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  z-index: 5;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .preview-markdown {
