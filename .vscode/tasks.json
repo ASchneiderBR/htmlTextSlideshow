@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev Lab",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev:lab"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Build OBS Files",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

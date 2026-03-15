@@ -1,171 +1,138 @@
 # OBS HTML Text Slideshow
 
-**Version 2.0** – A complete, standalone text slideshow system for OBS Studio. Control on-stream text slides with a modern browser dock, smooth transitions, and global hotkeys. Inspired by [Animated-Lower-Thirds](https://github.com/noeal-dac/Animated-Lower-Thirds), reimagined for text presentations.
+Modern text slideshow tooling for OBS Studio with a React dock, a typed overlay runtime, markdown support, theme-aware editing, and static build output ready for local-file Browser Sources.
 
-![Dock Preview](https://i.imgur.com/dfnu3HP.png)
+## Version 3.0
 
-## 🚀 Quick Start (Super Easy Install)
+Version 3.0 modernizes the project architecture without changing its core OBS workflow:
 
-### Installation from Release ZIP (Recommended)
+- React + TypeScript dock
+- TypeScript overlay runtime
+- Shared state, transport, and markdown utilities
+- Static OBS-ready assets generated under `dist/`
+- Lua still handles OBS hotkeys and installation paths
 
-1. **Download the latest release**:
-   - Go to [Releases](https://github.com/ASchneiderBR/htmlTextSlideshow/releases)
-   - Download `htmlTextSlideshow-X.Y.Z.zip` (latest version)
-   
-2. **Extract the ZIP file**:
-   - Extract all files to a folder on your computer (e.g., `Documents\HTML-Text-Slideshow`)
-   - **Important**: Extract directly - the ZIP contains files in the root (no subfolder)
-   - You should see: `Dock.html`, `Source.html`, `text-slides.lua`, `README.md`, `LICENSE`
+The runtime files OBS uses are now built artifacts, not handwritten root HTML files.
+The final `dist` output is generated as standalone HTML files again for easier OBS compatibility.
 
-3. **Load the script in OBS**:
-   - In OBS, go to **Tools → Scripts**
-   - Click the `+` button
-   - Browse and load **`text-slides.lua`** from the extracted folder
+## Quick Start
 
-4. **Get file paths from Script Properties**:
-   - In the **Script Properties** panel, you'll see two file paths:
-     - **Dock URL** – Copy this path (starts with `file:///`)
-     - **Source Path** – Copy this path
+### Using a release ZIP
 
-5. **Add the Dock**:
-   - Go to `View > Docks > Custom Browser Docks...`
-   - Click `+` to add a new dock
-   - **Dock Name**: `Text Slides` (or any name you like)
-   - **URL**: Paste the **Dock URL** from step 4
-   - Click **OK**
+1. Download the latest release from GitHub Releases.
+2. Extract the ZIP to a local folder.
+3. Load `text-slides.lua` in OBS through `Tools > Scripts`.
+4. Open the script Properties panel and copy the generated paths.
+5. Add a custom dock using the `Dock URL` value.
+6. Add a Browser Source pointing to `dist/Source.html`.
 
-6. **Add the Source to your scene**:
-   - Add a **Browser Source** to your scene
-   - Check **"Local file"**
-   - Browse to select **`Source.html`**, or paste the **Source Path** into the URL field
-   - Set width/height to match your canvas (e.g., 1920x1080)
-   - Click **OK**
+### Using this repository directly
 
-7. **Configure Hotkeys** (optional):
-   - Go to `Settings > Hotkeys`
-   - Search for "Text Slides"
-   - Bind keys for:
-     - **Text Slides: Next** – Advance to next slide
-     - **Text Slides: Previous** – Go back to previous slide
-     - **Text Slides: First** – Jump to first slide
+1. Install dependencies:
 
-8. **Done!** 
-   - Open the **Text Slides** dock
-   - Type or paste your content
-   - Use `---` on a blank line to separate slides
-   - Click **"Add slides"** to publish
-   - Control slides with the dock buttons or your hotkeys during streaming!
+```bash
+npm install
+```
 
-## 📁 Files (All-In-One Design)
+2. Start the split-screen dev environment:
 
-Version 2.0 simplifies everything into just **3 core files** (plus auto-generated files):
+```bash
+npm run dev:lab
+```
 
-**Core Files** (included in release ZIP):
-- **`text-slides.lua`** – The installer script. Manages hotkeys and displays file paths.
-- **`Dock.html`** – The control panel (standalone, all CSS/JS bundled inside).
-- **`Source.html`** – The overlay display (standalone, all CSS/JS bundled inside).
+3. Build the OBS runtime:
 
-**Auto-generated Files** (created automatically when you use the slideshow):
-- **`hotkeys.js`** – Bridges Lua hotkey commands to the Dock (created by the Lua script).
-- **`slides.json`** – Fallback storage for slides if BroadcastChannel fails (created automatically).
+```bash
+npm run build
+```
 
-**Note**: The release ZIP contains only the core files. Auto-generated files are created in the same folder when you first use the slideshow.
+4. Load `text-slides.lua` in OBS.
+5. Use the generated paths to `dist/Dock.html` and `dist/Source.html`.
 
-## ✨ Features
+If the VS Code NPM Scripts panel does not list the scripts, run `Terminal > Run Task` and use `Dev Lab` or `Build OBS Files`.
 
-### Typography & Styling
-- **Markdown support:**
-  - **Bold** (`**text**` or `__text__`), *Italic* (`*text*` or `_text_`), ~~Strikethrough~~ (`~~text~~`)
-  - Headings (`# H1` through `###### H6`)
-  - Lists: unordered (`- item`) and ordered (`1. item`)
-  - Code blocks (` ```code``` `), inline code (`` `code` ``), blockquotes (`> quote`)
-  - Links (`[text](url)`), images (`![alt](url)`)
-- **Font control:**
-  - 30+ fonts: Google Fonts (Montserrat, Roboto, Open Sans, Poppins, etc.) and System fonts
-  - Custom font size (18px - 120px, respects line breaks)
-- **Advanced text effects:**
-  - **Color picker** with transparency control (applies to entire layer for consistent look)
-  - **Shadow intensity** (0-100): from subtle to dramatic black shadow with increasing blur
-  - **Stroke (outline)** intensity (0-10): adjustable text outline that renders behind characters
-- **Alignment:**
-  - Horizontal: Left, Center, Right
-  - Vertical: Top, Middle, Bottom
+## Repository Structure
 
-### Slide Management
-- **Slide transitions:**
-  - 13 transition types: Crossfade, Fade, Slide (Left/Right/Up/Down), Zoom (In/Out), Push (Left/Right/Up/Down), None (instant)
-  - Adjustable duration (0-2000ms)
-  - **Smart transitions**: Only animates when changing slides or previewing transitions, not when editing formatting
-- **Preview panel:**
-  - Live markdown rendering
-  - Drag-and-drop reordering
-  - One-click slide activation
-  - Active slide highlighting
-- **Loop mode:** Auto-return to first slide after the last one
-- **Persistent state:** All slides saved to browser localStorage and synced instantly
+- `src/dock/` — React dock application
+- `src/source/` — lightweight overlay runtime
+- `src/shared/` — shared state, transport, markdown, and font helpers
+- `dist/` — generated OBS-ready runtime output
+- `text-slides.lua` — OBS bridge and hotkey registration
+- `scripts/` — build finalization and release packaging helpers
+
+## Features
+
+### Dock
+
+- Markdown slide authoring with delimiter-based parsing
+- Drag-and-drop playlist reordering
+- Active slide selection and playback control
+- Backup and restore with JSON files
+- Autoplay and loop controls
+- Theme-aware interface with dark and light modes
+- Transport and storage status feedback
+
+### Source
+
+- Lightweight overlay runtime for OBS Browser Source
+- Crossfade, fade, directional slide, zoom, and instant transitions
+- BroadcastChannel sync with storage and JSON fallback modes
+- Progress bar support for autoplay or timed slides
+- On-demand font loading
 
 ### OBS Integration
-- **Global hotkeys:** Next, Previous, First Slide (bind in OBS Settings > Hotkeys)
-- **Real-time sync:** Changes appear instantly via BroadcastChannel API
-- **Fallback mode:** JSON polling if BroadcastChannel is unavailable
-- **Zero dependencies:** No installation, no npm, no build process
 
-## 🎬 Everyday Workflow
+- Global hotkeys via Lua (`Next`, `Previous`, `First`)
+- Generated hotkey bridge at `dist/hotkeys.js`
+- Installation paths shown directly in the OBS script properties panel
 
-1. **Edit slides:** Type or paste text in the Dock. Use `---` on a blank line to separate slides.
-2. **Style it:** Adjust font, color, shadow, stroke, and alignment in real-time.
-3. **Publish:** Click **"Add slides"** to add them to your show.
-4. **Present:** Click **Play** buttons in the preview, or use **Hotkeys** during your stream.
+## Development Workflow
 
-## 🔧 Technical Details
+### Build
 
-### Architecture (v2.0)
-- **Standalone HTML files**: All CSS and JavaScript bundled inline—no external dependencies.
-- **ES5 compatibility**: Pure JavaScript (no modules) for maximum OBS CEF browser compatibility.
-- **BroadcastChannel sync**: Real-time communication between Dock and Source within the same OBS instance.
-- **localStorage persistence**: Slides saved per OBS profile, survives restarts.
-- **Lua bridge**: Hotkey commands written to `hotkeys.js`, polled by the Dock every second.
+```bash
+npm run build
+```
 
-### What's New in v2.0
-- **Simplified structure**: From 15+ files to just 3 core files (Dock.html, Source.html, text-slides.lua).
-- **No build process**: Everything works directly from source—open the HTML in any browser.
-- **Better installation**: Script properties display exact file paths with `file:///` prefix for easy copy/paste.
-- **Enhanced typography**: Shadow and stroke effects, unified opacity control, better font rendering.
-- **Improved performance**: Debounced inputs, markdown caching, optimized animations with GPU acceleration.
+This produces:
 
-### Browser Compatibility
-- **OBS Studio 28+** (Chromium Embedded Framework)
-- **Any modern browser** (for testing the Dock outside OBS)
+- `dist/DevLab.html`
+- `dist/Dock.html`
+- `dist/Source.html`
+- `dist/hotkeys.js`
+- `dist/slides.json`
 
-## 🤖 About the Development
+The HTML files are self-contained so OBS does not need companion JS or CSS asset files beside them.
 
-**Disclaimer:** This project was created entirely using **AI-assisted coding tools (LLMs via Cursor)**.
+### Dev Lab
 
-- **100% AI-Generated**: Every line of code (v1.0 and v2.0) was generated by AI.
-- **Human-Guided**: Direction, testing, and refinement by a human with zero coding knowledge.
-- **Function over Form**: The priority was creating a robust, user-friendly tool.
-- **Community Driven**: Pull Requests, bug reports, and feature requests are welcome!
+For testing and debugging during development:
 
-## 💡 Use Cases
+- run `npm run dev:lab` to open the split-screen page automatically
+- or open `src/devlab/index.html` while Vite dev is running
+- or open `dist/DevLab.html` after `npm run build`
 
-- **Live streaming**: Display talking points, quotes, lyrics, or audience questions.
-- **Presentations**: Professional slide transitions without leaving OBS.
-- **Church services**: Scripture verses, song lyrics, announcements.
-- **Education**: Lecture notes, formulas, code snippets (with syntax highlighting via markdown).
-- **Gaming**: Quest objectives, story text, patch notes.
+This page renders the dock and source side by side in a split-screen layout and includes quick reload buttons for both frames.
 
-## 📝 License
+### Release packaging
 
-This project is licensed under the **GNU General Public License v2.0 or later** (GPL v2.0+), which is compatible with OBS Studio's license requirements.
+```bash
+npm run build
+npm run package:release
+```
 
-This means:
-- ✅ Free to use, modify, and distribute
-- ✅ Source code must remain open and available
-- ✅ Derivative works must also be licensed under GPL v2.0+
+This creates `release-package/` containing:
 
-For the full license text, see the [LICENSE](LICENSE) file in this repository.
+- `dist/`
+- `text-slides.lua`
+- `README.md`
+- `LICENSE`
 
-## 🙏 Credits
+## Browser Compatibility
 
-- Inspired by [Animated-Lower-Thirds](https://github.com/noeal-dac/Animated-Lower-Thirds) by noeal-dac.
-- Developed with [Cursor](https://cursor.sh) AI assistance.
+- OBS Studio 28+
+- Modern Chromium-based browsers for local testing
+
+## License
+
+This project is licensed under GPL v2.0 or later. See `LICENSE` for details.

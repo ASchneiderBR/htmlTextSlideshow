@@ -1,0 +1,144 @@
+{
+  "version": "3.0.0",
+  "updatedAt": "2026-03-15T00:01:11.240Z",
+  "metadata": {
+    "lastWriter": "build",
+    "source": "release-package",
+    "notes": "sample-markdown-slides"
+  },
+  "settings": {
+    "defaultFontFamily": "'Montserrat', sans-serif",
+    "defaultFontSizePx": 42,
+    "lineHeight": 1.25,
+    "textAlign": "center",
+    "verticalAlign": "center",
+    "textColor": "#ffffff",
+    "textOpacity": 100,
+    "shadowIntensity": 0,
+    "strokeIntensity": 0,
+    "markdown": true,
+    "transitionType": "crossfade",
+    "transitionDuration": 250,
+    "showProgressBar": true,
+    "theme": "dark"
+  },
+  "slides": [
+    {
+      "id": "slide-001",
+      "title": "Headline",
+      "body": "# Markdown check\n## Headings, emphasis and inline code\nThis slide tests **bold**, *italic*, ~~strike~~ and `inline code`.",
+      "raw": "Headline\n\n# Markdown check\n## Headings, emphasis and inline code\nThis slide tests **bold**, *italic*, ~~strike~~ and `inline code`.",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": null,
+      "notes": "Headings and inline formatting.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-002",
+      "title": "Bullets",
+      "body": "### Bullet list\n- First talking point\n- Second talking point\n- Third talking point with **highlight**",
+      "raw": "Bullets\n\n### Bullet list\n- First talking point\n- Second talking point\n- Third talking point with **highlight**",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": null,
+      "notes": "Unordered list.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-003",
+      "title": "Numbered",
+      "body": "### Ordered list\n1. Open OBS\n2. Reload the Browser Source\n3. Confirm the slide alignment",
+      "raw": "Numbered\n\n### Ordered list\n1. Open OBS\n2. Reload the Browser Source\n3. Confirm the slide alignment",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": null,
+      "notes": "Ordered list.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-004",
+      "title": "Quote",
+      "body": "> Browser Source should stay transparent.\n> Alignment must follow the viewport.",
+      "raw": "Quote\n\n> Browser Source should stay transparent.\n> Alignment must follow the viewport.",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": "left",
+      "notes": "Blockquote with left alignment.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-005",
+      "title": "Code Block",
+      "body": "### Fenced code\n```lua\nobs.script_log(obs.LOG_INFO, \"hotkey triggered\")\n```",
+      "raw": "Code Block\n\n### Fenced code\n```lua\nobs.script_log(obs.LOG_INFO, \"hotkey triggered\")\n```",
+      "fontFamily": "'JetBrains Mono', monospace",
+      "fontSizePx": 34,
+      "textAlign": "left",
+      "notes": "Fenced code block.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-006",
+      "title": "Rule",
+      "body": "### Divider test\nLine before the rule\n\n---\n\nLine after the rule",
+      "raw": "Rule\n\n### Divider test\nLine before the rule\n\n---\n\nLine after the rule",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": "center",
+      "notes": "Horizontal rule inside Markdown.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-007",
+      "title": "Link",
+      "body": "### Link rendering\n[OBS Studio](https://obsproject.com) and [GitHub](https://github.com) should render as anchors.",
+      "raw": "Link\n\n### Link rendering\n[OBS Studio](https://obsproject.com) and [GitHub](https://github.com) should render as anchors.",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": "center",
+      "notes": "Link markdown.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-008",
+      "title": "Table",
+      "body": "### GFM table\n| Item | Status |\n| --- | --- |\n| Markdown | OK |\n| Source | Test |\n| OBS | Ready |",
+      "raw": "Table\n\n### GFM table\n| Item | Status |\n| --- | --- |\n| Markdown | OK |\n| Source | Test |\n| OBS | Ready |",
+      "fontFamily": null,
+      "fontSizePx": 32,
+      "textAlign": "center",
+      "notes": "GitHub-flavored table.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-009",
+      "title": "Mixed Alignment",
+      "body": "### Right-aligned test\nThis slide should hug the right side of the viewport.",
+      "raw": "Mixed Alignment\n\n### Right-aligned test\nThis slide should hug the right side of the viewport.",
+      "fontFamily": null,
+      "fontSizePx": null,
+      "textAlign": "right",
+      "notes": "Horizontal alignment check.",
+      "durationMs": 0
+    },
+    {
+      "id": "slide-010",
+      "title": "Long Form",
+      "body": "### Multi-paragraph\nFirst paragraph with **strong emphasis** and a manual line break.\nSecond line stays in the same paragraph.\n\nSecond paragraph to test spacing, wrapping and viewport anchoring over a longer block of text.",
+      "raw": "Long Form\n\n### Multi-paragraph\nFirst paragraph with **strong emphasis** and a manual line break.\nSecond line stays in the same paragraph.\n\nSecond paragraph to test spacing, wrapping and viewport anchoring over a longer block of text.",
+      "fontFamily": null,
+      "fontSizePx": 30,
+      "textAlign": "left",
+      "notes": "Paragraph spacing and wrapping.",
+      "durationMs": 0
+    }
+  ],
+  "activeSlideIndex": 0,
+  "playlist": {
+    "mode": "manual",
+    "loop": true,
+    "autoAdvanceMs": 5000,
+    "isPlaying": false
+  }
+}

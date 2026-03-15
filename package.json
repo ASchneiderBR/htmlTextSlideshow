@@ -1,0 +1,32 @@
+{
+  "name": "obs-html-text-slideshow",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Modern OBS text slideshow with React dock, TypeScript source runtime, and static build output.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:lab": "vite --open /src/devlab/index.html",
+    "dev:dock": "vite --open /src/dock/index.html",
+    "dev:source": "vite --open /src/source/index.html",
+    "build": "node scripts/build-dist.mjs",
+    "preview": "vite preview",
+    "package:release": "node scripts/package-release.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dompurify": "^3.3.0",
+    "marked": "^16.4.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.0",
+    "vitest": "^3.2.4"
+  }
+}

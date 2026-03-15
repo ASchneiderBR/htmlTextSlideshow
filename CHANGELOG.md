@@ -1,5 +1,38 @@
 # Changelog
 
+## [3.0.0] - 2026-03-14
+
+### Added
+- Modern frontend architecture with Vite, React, and TypeScript.
+- New dock UI with tokenized dark/light themes and a more fluid presentation workflow.
+- Typed overlay runtime with modular source code and OBS-ready static build output in `dist/`.
+- Build finalization and release packaging scripts for generating OBS-compatible assets.
+- Dev Lab split-screen page for dock/source testing with draggable resize support.
+- Built-in sample slideshow with 10 Markdown test slides covering headings, lists, quotes, links, tables, code blocks, and alignment cases.
+- Automatic prerelease publishing for pushes to `main`, including generated ZIP artifacts.
+
+### Changed
+- OBS now consumes `dist/Dock.html` and `dist/Source.html` instead of root HTML files.
+- Dock and source logic moved from giant inline documents into shared TypeScript modules.
+- Release packaging now ships the built `dist/` directory plus the Lua script and docs.
+- Dock controls were simplified and compacted, including smaller transport buttons, a single-icon theme toggle, and a reduced status/log bar.
+- Playlist cards now prioritize slide number and rendered content, with slide actions moved below the preview.
+- Sidebar spacing and responsive behavior were refined to work better in single-column layouts.
+
+### Fixed
+- Hotkey bridge now initializes in `dist/hotkeys.js`, matching the dock runtime path.
+- Dist output is normalized for local file loading in OBS.
+- Build output now restores standalone `dist/Dock.html`, `dist/Source.html`, and `dist/DevLab.html` files without external JS or CSS assets.
+- Development startup is easier through explicit `dev:lab` scripts and VS Code tasks.
+- Source alignment now follows the Browser Source viewport more reliably while keeping the overlay fully transparent.
+- Development hotkey polling no longer spams missing `hotkeys.js` requests in Dev Lab.
+- Dock dropdowns, log drawer layout, and compact control sizing were cleaned up for dark/light theme consistency.
+
+### Removed
+- Legacy root-level HTML runtime from the active distribution path.
+
+---
+
 ## [2.3.1] - 2025-12-13
 
 ### Fixed

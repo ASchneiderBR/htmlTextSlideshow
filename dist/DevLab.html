@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OBS Text Slideshow Dev Lab</title>
+    <script type="module">
+
+var e=document.getElementById(`root`);if(!e)throw Error(`Dev lab root element not found.`);var t=`./Dock.html`,n=`./Source.html?debug=1`;e.innerHTML=`
+  <div class="lab-shell">
+    <header class="lab-toolbar">
+      <div>
+        <p class="lab-eyebrow">OBS Text Slideshow</p>
+        <h1>Dev Lab</h1>
+      </div>
+      <div class="lab-actions">
+        <button type="button" data-action="reload-dock">Reload dock</button>
+        <button type="button" data-action="reload-source">Reload source</button>
+        <button type="button" data-action="reload-both">Reload both</button>
+        <a href="${t}" target="_blank" rel="noreferrer">Open dock</a>
+        <a href="${n}" target="_blank" rel="noreferrer">Open source</a>
+      </div>
+    </header>
+    <main class="lab-grid" data-orientation="horizontal">
+      <section class="lab-panel lab-panel--dock">
+        <div class="lab-panel__header">
+          <span>Dock</span>
+          <code>${t}</code>
+        </div>
+        <iframe title="Dock preview" data-frame="dock" src="${t}"></iframe>
+      </section>
+      <div class="lab-splitter" data-role="splitter" role="separator" aria-label="Resize panels" aria-orientation="vertical" tabindex="0">
+        <span></span>
+      </div>
+      <section class="lab-panel lab-panel--source">
+        <div class="lab-panel__header">
+          <span>Source</span>
+          <code>${n}</code>
+        </div>
+        <iframe title="Source preview" data-frame="source" src="${n}"></iframe>
+      </section>
+    </main>
+  </div>
+`;var r=e.querySelector(`[data-frame='dock']`),i=e.querySelector(`[data-frame='source']`),a=e.querySelector(`.lab-grid`),o=e.querySelector(`[data-role='splitter']`);function s(){if(!a||!o)return;let e=window.matchMedia(`(max-width: 1100px)`).matches;a.dataset.orientation=e?`vertical`:`horizontal`,o.setAttribute(`aria-orientation`,e?`horizontal`:`vertical`)}function c(e){if(!e)return;let t=e.getAttribute(`src`)||``,n=t.includes(`?`)?`&`:`?`;e.setAttribute(`src`,`${t.split(/[?&]t=/)[0]}${n}t=${Date.now()}`)}if(e.querySelector(`[data-action='reload-dock']`)?.addEventListener(`click`,()=>c(r)),e.querySelector(`[data-action='reload-source']`)?.addEventListener(`click`,()=>c(i)),e.querySelector(`[data-action='reload-both']`)?.addEventListener(`click`,()=>{c(r),c(i)}),s(),window.addEventListener(`resize`,s),a&&o){let e=!1,t=(e,t)=>{let n=a.getBoundingClientRect();if(a.dataset.orientation===`vertical`){let e=(t-n.top)/n.height*100,r=Math.min(Math.max(e,20),80);a.style.setProperty(`--split-primary`,`${r}%`);return}let r=(e-n.left)/n.width*100,i=Math.min(Math.max(r,20),80);a.style.setProperty(`--split-primary`,`${i}%`)};o.addEventListener(`pointerdown`,t=>{e=!0,o.setPointerCapture(t.pointerId),document.body.classList.add(`is-resizing`)}),o.addEventListener(`pointermove`,n=>{e&&t(n.clientX,n.clientY)});let n=t=>{e&&(e=!1,document.body.classList.remove(`is-resizing`),t&&o.hasPointerCapture(t.pointerId)&&o.releasePointerCapture(t.pointerId))};o.addEventListener(`pointerup`,n),o.addEventListener(`pointercancel`,n),o.addEventListener(`keydown`,e=>{let t=a.dataset.orientation,n=Number.parseFloat(a.style.getPropertyValue(`--split-primary`)||`50`),r=e.key===`ArrowLeft`||e.key===`ArrowUp`?-5:e.key===`ArrowRight`||e.key===`ArrowDown`?5:0;if(!r||t===`horizontal`&&(e.key===`ArrowUp`||e.key===`ArrowDown`)||t===`vertical`&&(e.key===`ArrowLeft`||e.key===`ArrowRight`))return;e.preventDefault();let i=Math.min(Math.max(n+r,20),80);a.style.setProperty(`--split-primary`,`${i}%`)})}
+</script>
+    <style>
+:root{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark;--bg:#07111f;--panel:#0a1423e0;--panel-alt:#f5f7faf2;--border:#ffffff1f;--text:#edf4ff;--muted:#95a6ba;--accent:#4fd1c5;--shadow:0 30px 70px #00000052;font-family:Segoe UI Variable,Aptos,system-ui,sans-serif}*{box-sizing:border-box}html,body,#root{min-height:100%;margin:0}body{min-height:100vh;color:var(--text);background:radial-gradient(circle at 0 0,#4fd1c52e,#0000 24%),radial-gradient(circle at 100% 100%,#f973162e,#0000 24%),linear-gradient(145deg,#08111d,#102038 50%,#0b1627)}button,a,code{font:inherit}.lab-shell{grid-template-rows:auto 1fr;gap:14px;min-height:100vh;padding:16px;display:grid}.lab-toolbar,.lab-panel{border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow);backdrop-filter:blur(16px);border-radius:24px}.lab-toolbar{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;padding:16px 18px;display:flex}.lab-eyebrow{text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 6px;font-size:.72rem}.lab-toolbar h1{margin:0;font-size:1.4rem}.lab-actions{flex-wrap:wrap;gap:10px;display:flex}.lab-actions button,.lab-actions a{border:1px solid var(--border);color:var(--text);background:#ffffff0f;border-radius:999px;padding:10px 14px;text-decoration:none}.lab-actions button:hover,.lab-actions a:hover{border-color:#4fd1c58c}.lab-grid{--split-primary:50%;grid-template-columns:minmax(280px, var(--split-primary)) 12px minmax(280px, calc(100% - var(--split-primary)));align-items:stretch;gap:14px;min-height:0;display:grid}.lab-panel{grid-template-rows:auto 1fr;gap:12px;min-height:0;padding:12px;display:grid}.lab-panel--source{background:radial-gradient(circle at 0 0,#4fd1c51a,#0000 26%),linear-gradient(160deg,#050d17eb,#0e1a2ce6)}.lab-splitter{border:1px solid var(--border);cursor:col-resize;user-select:none;touch-action:none;background:#ffffff0d;border-radius:999px;align-self:stretch;width:12px;position:relative}.lab-splitter span{background:linear-gradient(#4fd1c5e6,#f97316e6);border-radius:999px;width:4px;height:72px;position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%)}.lab-splitter:focus-visible{outline-offset:2px;outline:2px solid #4fd1c5bf}body.is-resizing{cursor:col-resize}.lab-panel__header{color:var(--muted);justify-content:space-between;align-items:center;gap:10px;font-size:.85rem;display:flex}.lab-panel__header code{color:var(--text);background:#ffffff0d;border-radius:999px;padding:4px 8px}iframe{background:var(--panel-alt);border:0;border-radius:18px;width:100%;height:100%;min-height:0}.lab-panel--source iframe{background:linear-gradient(160deg,#07111f,#102038 55%,#0b1627)}@media (max-width:1100px){.lab-grid{grid-template-columns:1fr;grid-template-rows:minmax(280px, var(--split-primary)) 12px minmax(280px, calc(100% - var(--split-primary)))}.lab-splitter{cursor:row-resize;width:100%;height:12px}.lab-splitter span{width:72px;height:4px}body.is-resizing{cursor:row-resize}}
+/*$vite$:1*/
+</style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
