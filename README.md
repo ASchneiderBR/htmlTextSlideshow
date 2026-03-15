@@ -24,7 +24,7 @@ The final `dist` output is generated as standalone HTML files again for easier O
 3. Load `text-slides.lua` in OBS through `Tools > Scripts`.
 4. Open the script Properties panel and copy the generated paths.
 5. Add a custom dock using the `Dock URL` value.
-6. Add a Browser Source pointing to `dist/Source.html`.
+6. Add a Browser Source pointing to `Source.html` in the extracted folder.
 
 ### Using this repository directly
 
@@ -83,7 +83,7 @@ If the VS Code NPM Scripts panel does not list the scripts, run `Terminal > Run 
 ### OBS Integration
 
 - Global hotkeys via Lua (`Next`, `Previous`, `First`)
-- Generated hotkey bridge at `dist/hotkeys.js`
+- Generated hotkey bridge at runtime beside the Lua script when OBS loads it
 - Installation paths shown directly in the OBS script properties panel
 
 ## Development Workflow
@@ -123,10 +123,10 @@ npm run package:release
 
 This creates `release-package/` containing:
 
-- `dist/`
+- `Dock.html`
+- `Source.html`
 - `text-slides.lua`
 - `README.md`
-- `LICENSE`
 
 ## Browser Compatibility
 

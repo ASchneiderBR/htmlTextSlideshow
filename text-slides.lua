@@ -11,12 +11,12 @@ local command_seq = 0
 -- Use OBS built-in function to get the script's directory
 local script_dir = script_path()
 
-local function dist_path(file_name)
-  return script_dir .. "dist/" .. file_name
+local function root_path(file_name)
+  return script_dir .. file_name
 end
 
 local function hotkey_path()
-  return dist_path("hotkeys.js")
+  return root_path("hotkeys.js")
 end
 
 local function write_command(command)
@@ -57,15 +57,15 @@ local function script_description()
 
 Control on-stream text slides with a modern React dock, typed overlay runtime, markdown formatting, advanced typography, and fluid transitions. Use global hotkeys (Next/Prev/First) to control slides during your stream.
 
-INSTALLATION: Build the project or use a release package, then use the dist paths shown in Properties.
+INSTALLATION: Build the project or use a release package, then use the root file paths shown in Properties.
 HOTKEYS: Settings > Hotkeys > search "Text Slides" (NOT in this window!)]]
 end
 
 function script_properties()
   local props = obs.obs_properties_create()
   
-  local dock_path = "file:///" .. dist_path("Dock.html")
-  local source_path = dist_path("Source.html")
+  local dock_path = "file:///" .. root_path("Dock.html")
+  local source_path = root_path("Source.html")
   
   obs.obs_properties_add_text(props, "about", "OBS Text Slideshow v3.0.0 - Modern dock, typed overlay runtime, and OBS-ready static output.", obs.OBS_TEXT_INFO)
   
@@ -88,8 +88,8 @@ end
 
 function script_update(settings)
   -- Keep the fields populated with the correct paths when settings change/load
-  local dock_path = "file:///" .. dist_path("Dock.html")
-  local source_path = "file:///" .. dist_path("Source.html")
+  local dock_path = "file:///" .. root_path("Dock.html")
+  local source_path = "file:///" .. root_path("Source.html")
   
   obs.obs_data_set_string(settings, "dock_url", dock_path)
   obs.obs_data_set_string(settings, "source_path", source_path)
@@ -116,13 +116,13 @@ function script_load(settings_data)
   -- Try to initialize hotkeys file
   write_command("null")
   
-  local dock_url = "file:///" .. script_dir:gsub("\\", "/") .. "dist/Dock.html"
-  local source_path = script_dir:gsub("\\", "/") .. "dist/Source.html"
+  local dock_url = "file:///" .. script_dir:gsub("\\", "/") .. "Dock.html"
+  local source_path = script_dir:gsub("\\", "/") .. "Source.html"
   
   print("[Text Slides v3.0.0] Loaded by Antonio Schneider")
   print("[Text Slides] Dock URL: " .. dock_url)
   print("[Text Slides] Source Path: " .. source_path)
-  print("[Text Slides] Make sure the dist folder exists before loading in OBS")
+  print("[Text Slides] Make sure Dock.html and Source.html exist beside the Lua script")
 end
 
 function script_save(settings_data)

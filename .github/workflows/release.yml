@@ -64,8 +64,8 @@ jobs:
             SHORT_SHA="${GITHUB_SHA::7}"
             VERSION="$BASE_VERSION-main.${GITHUB_RUN_NUMBER}"
             TAG_NAME="main-${BASE_VERSION}-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
-            RELEASE_NAME="Main build ${BASE_VERSION} #${GITHUB_RUN_NUMBER}"
-            PRERELEASE="true"
+            RELEASE_NAME="Release ${BASE_VERSION} main #${GITHUB_RUN_NUMBER}"
+            PRERELEASE="false"
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
@@ -167,7 +167,7 @@ jobs:
           git tag -a "$TAG_NAME" -m "Release $VERSION"
           git push origin "$TAG_NAME"
 
-      - name: Create Git tag (Main prerelease)
+      - name: Create Git tag (Main release)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
@@ -176,7 +176,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG_NAME" -m "Main build $VERSION"
+          git tag -a "$TAG_NAME" -m "Release $VERSION"
           git push origin "$TAG_NAME"
       
       - name: Create GitHub Release
@@ -189,7 +189,7 @@ jobs:
             
             ## 📦 Download
             
-            Download the ZIP file below, extract it, and use the generated `dist/` paths shown by the Lua script inside OBS Studio.
+            Download the ZIP file below, extract it, and use the root `Dock.html` and `Source.html` paths shown by the Lua script inside OBS Studio.
           files: htmlTextSlideshow-${{ steps.get_version.outputs.version }}.zip
           draft: false
           prerelease: ${{ steps.get_version.outputs.prerelease }}

@@ -9,12 +9,12 @@
 - Build finalization and release packaging scripts for generating OBS-compatible assets.
 - Dev Lab split-screen page for dock/source testing with draggable resize support.
 - Built-in sample slideshow with 10 Markdown test slides covering headings, lists, quotes, links, tables, code blocks, and alignment cases.
-- Automatic prerelease publishing for pushes to `main`, including generated ZIP artifacts.
+- Automatic release publishing for pushes to `main`, including generated ZIP artifacts.
 
 ### Changed
 - OBS now consumes `dist/Dock.html` and `dist/Source.html` instead of root HTML files.
 - Dock and source logic moved from giant inline documents into shared TypeScript modules.
-- Release packaging now ships the built `dist/` directory plus the Lua script and docs.
+- Release packaging now ships `Dock.html`, `Source.html`, `text-slides.lua`, and `README.md` at the root of the ZIP.
 - Dock controls were simplified and compacted, including smaller transport buttons, a single-icon theme toggle, and a reduced status/log bar.
 - Playlist cards now prioritize slide number and rendered content, with slide actions moved below the preview.
 - Sidebar spacing and responsive behavior were refined to work better in single-column layouts.
